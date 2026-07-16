@@ -13,7 +13,7 @@ public:
 private:
     using Filter=juce::dsp::IIR::Filter<float>;
     struct Chain { Filter hp[2], bell[2], lp[2]; } mixChain, referenceChain;
-    double rate=44100.0; ComparisonSettings settings;
+    double rate=44100.0; ComparisonSettings settings; bool initialised=false;
     void processChain(juce::AudioBuffer<float>&, Chain&) noexcept;
 };
 }

@@ -11,7 +11,7 @@ bool ReferencePlayer::load(const juce::File& file, juce::AudioFormatManager& for
     next->samples.setSize(2, static_cast<int>(reader->lengthInSamples));
     if (!reader->read(&next->samples, 0, next->samples.getNumSamples(), 0, true, true)) { error = "Errore durante la decodifica"; return false; }
     if (reader->numChannels == 1) next->samples.copyFrom(1, 0, next->samples, 0, 0, next->samples.getNumSamples());
-    std::atomic_store(&audio, std::move(next)); position.store(startOffset.load()); return true;
+    audio.store(std::move(next), std::memory_order_release); position.store(startOffset.load()); return true;
 }
 void ReferencePlayer::prepare(double rate) noexcept { hostRate.store(rate > 0.0 ? rate : 44100.0); }
 void ReferencePlayer::stop() noexcept { playing.store(false); position.store(startOffset.load()); }
@@ -19,9 +19,9 @@ void ReferencePlayer::seek(double seconds) noexcept { position.store(juce::jmax(
 void ReferencePlayer::setStartOffset(double seconds) noexcept { startOffset.store(juce::jmax(0.0, seconds)); }
 void ReferencePlayer::setLoop(bool enabled, double start, double end) noexcept { loopStart.store(juce::jmax(0.0,start)); loopEnd.store(juce::jmax(0.0,end)); loopEnabled.store(enabled && end > start); }
 double ReferencePlayer::getPositionSeconds() const noexcept { return position.load(); }
-double ReferencePlayer::getDurationSeconds() const noexcept { auto d=std::atomic_load(&audio); return d ? d->samples.getNumSamples()/d->sampleRate : 0.0; }
+double ReferencePlayer::getDurationSeconds() const noexcept { auto d=audio.load(std::memory_order_acquire); return d ? d->samples.getNumSamples()/d->sampleRate : 0.0; }
 void ReferencePlayer::process(juce::AudioBuffer<float>& out) noexcept {
-    out.clear(); auto data=std::atomic_load(&audio); if (!data || !playing.load()) return;
+    out.clear(); auto data=audio.load(std::memory_order_acquire); if (!data || !playing.load()) return;
     auto pos=position.load(); const auto duration=getDurationSeconds(); const auto step=data->sampleRate/hostRate.load();
     for(int i=0;i<out.getNumSamples();++i) {
         if(loopEnabled.load() && pos>=loopEnd.load()) pos=loopStart.load();

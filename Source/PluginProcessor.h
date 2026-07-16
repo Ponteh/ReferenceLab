@@ -3,6 +3,7 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/ReferencePlayer.h"
+#include "Library/ReferenceManager.h"
 
 class ReferenceLabAudioProcessor final : public juce::AudioProcessor {
 public:
@@ -19,10 +20,11 @@ public:
     bool loadFile(const juce::File&,juce::String&); void setReference(bool b){reference.store(b);} bool isReference()const{return reference.load();}
     void playReference(){player.play();} void pauseReference(){player.pause();} void stopReference(){player.stop();}
     referencelab::ReferencePlayer& getPlayer(){return player;}
+    referencelab::ReferenceManager& getReferenceManager(){return manager;}
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    juce::AudioFormatManager formats; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;
+    juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;
     juce::AudioBuffer<float> referenceBuffer; std::atomic<bool> reference{false}; juce::SmoothedValue<float> blend;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };
