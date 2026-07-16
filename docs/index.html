@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ReferenceLab is a Windows VST3 reference-track comparison environment for accurate, loudness-matched A/B decisions.">
+  <meta name="theme-color" content="#090b10">
+  <title>ReferenceLab — Reference-track comparison for mixing</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="ReferenceLab home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      <span>Reference<span>Lab</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a href="#v1">Version 1</a>
+      <a href="#v2">Version 2</a>
+      <a href="#cambridge">Cambridge MT</a>
+      <a class="nav-cta repo-link" href="#" rel="noreferrer">Source</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Windows VST3 · Local-first · C++20 / JUCE</p>
+        <h1>Make better mix decisions through <em>fair comparison.</em></h1>
+        <p class="lead">ReferenceLab brings reference playback, loudness matching, focused listening and technical analysis into one comparison workflow—without uploading the user's audio.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="#v1">Explore Version 1</a>
+          <a class="button secondary" href="#v2">See the V2 vision <span aria-hidden="true">→</span></a>
+        </div>
+        <dl class="hero-stats">
+          <div><dt>4</dt><dd>listening modes</dd></div>
+          <div><dt>4×</dt><dd>true-peak interpolation</dd></div>
+          <div><dt>0</dt><dd>cloud uploads in V1</dd></div>
+        </dl>
+      </div>
+
+      <div class="product-visual" aria-label="Stylised ReferenceLab interface preview">
+        <div class="window-bar">
+          <span class="mini-brand">REFERENCE<span>LAB</span></span>
+          <span class="window-state"><i></i> SAFE EXPORT</span>
+        </div>
+        <div class="source-tabs"><b>MIX</b><span>A / B</span><b>REFERENCE</b></div>
+        <div class="spectrum" aria-hidden="true">
+          <div class="grid"></div>
+          <svg viewBox="0 0 720 210" preserveAspectRatio="none">
+            <path class="mix-area" d="M0,170 C35,160 45,102 76,112 C114,125 120,52 160,73 C205,96 215,42 258,66 C302,90 316,52 360,78 C400,102 428,57 466,85 C512,118 535,65 572,97 C616,136 662,101 720,130 L720,210 L0,210 Z"/>
+            <path class="ref-area" d="M0,180 C48,172 58,126 92,135 C134,148 148,78 188,96 C229,116 246,66 291,88 C332,110 354,75 398,99 C445,126 470,82 512,111 C554,140 595,104 626,126 C663,152 689,135 720,145 L720,210 L0,210 Z"/>
+            <path class="mix-line" d="M0,170 C35,160 45,102 76,112 C114,125 120,52 160,73 C205,96 215,42 258,66 C302,90 316,52 360,78 C400,102 428,57 466,85 C512,118 535,65 572,97 C616,136 662,101 720,130"/>
+            <path class="ref-line" d="M0,180 C48,172 58,126 92,135 C134,148 148,78 188,96 C229,116 246,66 291,88 C332,110 354,75 398,99 C445,126 470,82 512,111 C554,140 595,104 626,126 C663,152 689,135 720,145"/>
+          </svg>
+          <span class="freq low">20 Hz</span><span class="freq mid">1 kHz</span><span class="freq high">20 kHz</span>
+        </div>
+        <div class="meter-row">
+          <article><small>MIX · INTEGRATED</small><strong class="mix-colour">−12.4</strong><span>LUFS</span></article>
+          <article><small>REFERENCE · INTEGRATED</small><strong class="ref-colour">−12.4</strong><span>LUFS</span></article>
+          <article class="match"><small>LOUDNESS MATCH</small><strong>ON</strong><span>−2.7 dB</span></article>
+        </div>
+        <div class="waveform" aria-hidden="true">
+          <span class="marker start">A</span><span class="marker current"></span><span class="marker end">B</span>
+          <div class="wave-bars"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section intro" id="v1">
+      <div class="section-heading">
+        <p class="eyebrow"><span></span> Version 1 · Local Reference Core</p>
+        <h2>A complete local comparison workflow.</h2>
+      </div>
+      <div class="intro-copy">
+        <p>Version 1 establishes the real-time audio core and the extensible architecture behind ReferenceLab. It runs as a stereo VST3 or standalone application on Windows 10/11.</p>
+        <p class="status"><i></i><span><strong>Implementation complete.</strong> Formal multi-DAW, performance and calibrated-meter validation remains in progress before a public release.</span></p>
+      </div>
+    </section>
+
+    <section class="feature-grid" aria-label="Version 1 features">
+      <article>
+        <span class="feature-number">01</span>
+        <h3>Reference library</h3>
+        <p>WAV, AIFF, FLAC and MP3 files, recursive scanning, editable Unicode metadata, search, filters, sorting, missing-file recovery and an atomic versioned JSON library.</p>
+      </article>
+      <article>
+        <span class="feature-number">02</span>
+        <h3>Click-safe A/B playback</h3>
+        <p>Play, pause, stop, seek, start offsets and crossfaded A/B loops, with sample-rate adaptation and rapid Mix/Reference switching.</p>
+      </article>
+      <article>
+        <span class="feature-number">03</span>
+        <h3>Fair level matching</h3>
+        <p>K-weighted gated loudness analysis, automatic or manual gain compensation, smoothing and a safety limit help prevent “louder sounds better” bias.</p>
+      </article>
+      <article>
+        <span class="feature-number">04</span>
+        <h3>Focused listening</h3>
+        <p>Symmetric high-pass, bell and low-pass comparison EQ, plus Stereo, Mono, Mid and Side monitoring applied consistently to both sources.</p>
+      </article>
+      <article>
+        <span class="feature-number">05</span>
+        <h3>Technical analysis</h3>
+        <p>FFT overlay, oscilloscope, LUFS, Peak, True Peak, RMS, Crest, LRA, correlation and stereo-width views provide context for listening decisions.</p>
+      </article>
+      <article>
+        <span class="feature-number">06</span>
+        <h3>Built for DAW safety</h3>
+        <p>Asynchronous loading, configurable LRU cache, project-state restoration and Safe Export keep reference audio out of detected offline renders.</p>
+      </article>
+    </section>
+
+    <section class="architecture section">
+      <div class="section-heading">
+        <p class="eyebrow"><span></span> Architecture</p>
+        <h2>Local today. Provider-ready tomorrow.</h2>
+      </div>
+      <div class="architecture-flow" aria-label="ReferenceLab architecture layers">
+        <div><small>Interface</small><strong>Library · Player · Analysis</strong></div>
+        <i aria-hidden="true">↓</i>
+        <div><small>Application</small><strong>Manager · State · Cache</strong></div>
+        <i aria-hidden="true">↓</i>
+        <div><small>Audio</small><strong>Playback · A/B · DSP</strong></div>
+        <i aria-hidden="true">↓</i>
+        <div class="accent"><small>Providers</small><strong>Local · JSON · HTTP</strong></div>
+      </div>
+      <p class="architecture-note">Disk access, JSON work and future network operations remain outside the real-time audio thread.</p>
+    </section>
+
+    <section class="v2 section" id="v2">
+      <div class="v2-title">
+        <p class="eyebrow"><span></span> Version 2 · Product vision</p>
+        <h2>From a local library to an extensible reference ecosystem.</h2>
+        <p>V2 builds on the existing multi-reference model and provider abstraction. The audio core remains stable while new sources and a more flexible interface are added around it.</p>
+      </div>
+      <ol class="roadmap">
+        <li><span>01</span><div><h3>Extended sources</h3><p>Importable JSON catalogues, direct HTTP/HTTPS audio sources and isolated provider errors.</p></div></li>
+        <li><span>02</span><div><h3>Multiple libraries & playlists</h3><p>Organise different collections, build playlists and move quickly between several active references.</p></div></li>
+        <li><span>03</span><div><h3>Full waveform workflow</h3><p>Overview waveform, draggable start/current/end markers, highlighted loop selection, zoom, scroll and stored positions.</p></div></li>
+        <li><span>04</span><div><h3>Advanced DAW sync</h3><p>More precise transport following, offsets and robust fallback when host timing information is unavailable.</p></div></li>
+        <li><span>05</span><div><h3>Professional adaptive UI</h3><p>Resizable and collapsible panels, consistent Mix/Reference colour language, readable FFT/EQ overlays and saved layouts.</p></div></li>
+      </ol>
+    </section>
+
+    <section class="cambridge section" id="cambridge">
+      <div class="cambridge-card">
+        <div>
+          <p class="eyebrow"><span></span> Proposed V2 exploration</p>
+          <h2>Cambridge MT catalogue access</h2>
+        </div>
+        <div class="cambridge-copy">
+          <p>ReferenceLab is interested in discussing a respectful, technically sustainable way to help users discover and access suitable Cambridge MT resources from within the V2 reference workflow.</p>
+          <ul>
+            <li>Integration only with explicit technical and legal approval.</li>
+            <li>Clear source attribution and compliance with applicable licences and terms.</li>
+            <li>Metadata and public links first; no rehosting or redistribution without permission.</li>
+            <li>User-initiated access, resilient provider isolation and straightforward removal if required.</li>
+          </ul>
+          <p class="disclaimer">Cambridge MT is not currently integrated with, affiliated with, or endorsing ReferenceLab. This section describes a proposed discussion for Version 2.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="principles section">
+      <p class="eyebrow"><span></span> Product principles</p>
+      <div class="principle-grid">
+        <div><strong>01</strong><h3>Listen first</h3><p>Measurements support critical listening; they do not replace it.</p></div>
+        <div><strong>02</strong><h3>Compare fairly</h3><p>Matched loudness and identical monitoring processing reduce bias.</p></div>
+        <div><strong>03</strong><h3>Protect the session</h3><p>Real-time safety, graceful errors and Safe Export are core behaviours.</p></div>
+        <div><strong>04</strong><h3>Respect the source</h3><p>Online catalogues require permission, attribution and licence compliance.</p></div>
+      </div>
+    </section>
+
+    <section class="closing">
+      <p class="eyebrow"><span></span> ReferenceLab</p>
+      <h2>One place to hear the difference.</h2>
+      <p>Version 1 proves the local comparison core. Version 2 expands where references can come from and how quickly engineers can understand them.</p>
+      <a class="button primary repo-link" href="#" rel="noreferrer">View the project on GitHub</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>ReferenceLab · Independent software project</span>
+    <span>Designed and developed by Riccardo · <span id="year">2026</span></span>
+  </footer>
+  <script src="site.js"></script>
+</body>
+</html>

@@ -27,3 +27,7 @@ Safe Export è attivo per impostazione predefinita. Alcuni host potrebbero non c
 ## Stato della versione 1
 
 Il core VST3 è implementato. Prima della distribuzione pubblica sono obbligatori test manuali in almeno tre DAW Windows, misure CPU/latency e validazione delle metriche con segnali di laboratorio.
+
+## Sito del progetto
+
+La presentazione pubblica di ReferenceLab si trova in `docs/` ed è pronta per GitHub Pages. Nel repository GitHub selezionare **Settings > Pages > Deploy from a branch**, quindi scegliere il branch `master` e la cartella `/docs`.
