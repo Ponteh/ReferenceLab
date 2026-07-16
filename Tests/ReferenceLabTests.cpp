@@ -66,6 +66,10 @@ public:
         expectWithinAbsoluteError(rendered.getSample(0,0),0.1f,0.0001f);
         expectWithinAbsoluteError(rendered.getSample(1,0),-0.1f,0.0001f);
 
+        beginTest("Reference player wraps an A/B loop");
+        audio->sampleRate=4.0;for(int i=0;i<4;++i){audio->samples.setSample(0,i,(float)i);audio->samples.setSample(1,i,(float)i);}player.prepare(4.0);player.setAudio(audio);player.setLoop(true,.25,.75,0.0);player.seek(.5);player.play();juce::AudioBuffer<float> looped(2,2);player.process(looped);
+        expectWithinAbsoluteError(looped.getSample(0,0),2.f,.0001f);expectWithinAbsoluteError(looped.getSample(0,1),1.f,.0001f);
+
         beginTest("Analysis metrics for correlated stereo");
         juce::AudioBuffer<float> meterSignal(2,4800);meterSignal.clear();
         for(int i=0;i<meterSignal.getNumSamples();++i){meterSignal.setSample(0,i,0.5f);meterSignal.setSample(1,i,0.5f);}

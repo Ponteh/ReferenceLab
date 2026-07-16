@@ -20,7 +20,7 @@ public:
     void stop() noexcept;
     void seek(double seconds) noexcept;
     void setStartOffset(double seconds) noexcept;
-    void setLoop(bool enabled, double startSeconds, double endSeconds) noexcept;
+    void setLoop(bool enabled, double startSeconds, double endSeconds, double crossfadeMs=10.0) noexcept;
     bool isLoaded() const noexcept { return audio.load(std::memory_order_acquire) != nullptr; }
     bool isPlaying() const noexcept { return playing.load(); }
     double getPositionSeconds() const noexcept;
@@ -28,6 +28,6 @@ public:
 private:
     std::atomic<std::shared_ptr<ReferenceAudioData>> audio;
     std::atomic<bool> playing { false }, loopEnabled { false };
-    std::atomic<double> position { 0.0 }, hostRate { 44100.0 }, startOffset { 0.0 }, loopStart { 0.0 }, loopEnd { 0.0 };
+    std::atomic<double> position { 0.0 }, hostRate { 44100.0 }, startOffset { 0.0 }, loopStart { 0.0 }, loopEnd { 0.0 }, loopCrossfade { 0.01 };
 };
 }

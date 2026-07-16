@@ -11,9 +11,10 @@ private:
     void listBoxItemDoubleClicked(int,const juce::MouseEvent&) override;
     void selectedRowsChanged(int) override;
     void timerCallback() override;
-    void refreshLibrary(); void chooseFolder(); void showError(const juce::String&); void saveSelected(); void removeSelected();
-    ReferenceLabAudioProcessor&p;referencelab::AnalysisDisplay analysisDisplay;juce::TextButton add{"Aggiungi file"},scan{"Scansiona cartella"},remove{"Rimuovi"},save{"Salva metadati"},mix{"MIX"},ref{"REFERENCE"},play{"Play"},stop{"Stop"};
-    juce::Label title,mixMeters,referenceMeters,outputMeters,matchedGain;juce::TextEditor search,editTitle,editArtist,editGenre,editBpm,editTags;juce::ToggleButton favouritesOnly{"Solo preferiti"},editFavourite{"Preferita"},autoMatch{"Auto Match"};juce::ComboBox sort,cacheSize,matchMode;juce::Slider manualGain;juce::ListBox list{"Reference library",this};
+    void refreshLibrary(); void chooseFolder(); void showError(const juce::String&); void saveSelected(); void removeSelected();void configurePlayback(int);void applyLoop();void persistPlayback();
+    ReferenceLabAudioProcessor&p;referencelab::AnalysisDisplay analysisDisplay;juce::TextButton add{"Aggiungi file"},scan{"Scansiona cartella"},remove{"Rimuovi"},save{"Salva metadati"},mix{"MIX"},ref{"REFERENCE"},play{"Play"},pause{"Pause"},stop{"Stop"};
+    juce::Label title,mixMeters,referenceMeters,outputMeters,matchedGain;juce::TextEditor search,editTitle,editArtist,editGenre,editBpm,editTags;juce::ToggleButton favouritesOnly{"Solo preferiti"},editFavourite{"Preferita"},autoMatch{"Auto Match"},loopEnabled{"Loop"},eqBypass{"EQ Bypass"};juce::ComboBox sort,cacheSize,matchMode,listeningMode;juce::Slider manualGain,seek,startOffset,loopStart,loopEnd,fade,hpf,bellFreq,bellGain,bellQ,lpf;juce::ListBox list{"Reference library",this};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>autoMatchAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>matchModeAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>manualGainAttachment;
+    std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>eqBypassAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>listeningModeAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>fadeAttachment,hpfAttachment,bellFreqAttachment,bellGainAttachment,bellQAttachment,lpfAttachment;
     std::vector<referencelab::ReferenceMetadata> rows;
 };
