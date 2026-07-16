@@ -54,6 +54,8 @@ if (REFERENCELAB_BUILD_TESTS)
         Tests/ReferenceLabTests.cpp
         Source/Library/ReferenceModel.cpp
         Source/Library/MetadataRepository.cpp
+        Source/Library/ReferenceManager.cpp
+        Source/Library/LocalReferenceProvider.cpp
         Source/Audio/ComparisonProcessor.cpp
         Source/Audio/ReferencePlayer.cpp
         Source/Audio/AnalysisEngine.cpp

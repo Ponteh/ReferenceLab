@@ -1,5 +1,6 @@
 #include <juce_core/juce_core.h>
 #include "Library/ReferenceModel.h"
+#include "Library/MetadataRepository.h"
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
@@ -92,6 +93,9 @@ public:
         beginTest("Lock-free sample FIFO preserves mono sum");
         referencelab::SampleFifo fifo;juce::AudioBuffer<float> fifoInput(2,2);fifoInput.setSample(0,0,1.f);fifoInput.setSample(1,0,-1.f);fifoInput.setSample(0,1,.5f);fifoInput.setSample(1,1,.5f);fifo.push(fifoInput);float fifoOutput[2]{};
         expectEquals(fifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],0.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],.5f,.0001f);
+
+        beginTest("Metadata repository saves atomically and reloads Unicode");
+        auto testDirectory=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("ReferenceLabTests",{},false);testDirectory.createDirectory();referencelab::MetadataRepository repository(testDirectory.getChildFile("reference.json"));referencelab::ReferenceLibrary library;library.root=testDirectory;referencelab::ReferenceMetadata stored;stored.uuid="repository-test";stored.title=juce::String::fromUTF8("Traccia è");stored.source="track.wav";library.references.push_back(stored);juce::String repositoryError;expect(repository.save(library,repositoryError),repositoryError);auto loaded=repository.load(repositoryError);expectEquals((int)loaded.references.size(),1);if(!loaded.references.empty())expectEquals(loaded.references.front().title,stored.title);expect(repository.save(library,repositoryError),repositoryError);expect(testDirectory.getChildFile("reference.json.bak").existsAsFile());testDirectory.deleteRecursively();
     }
 };
 

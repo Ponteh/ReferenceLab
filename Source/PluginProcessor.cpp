@@ -25,6 +25,9 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReferenceLabAudioProcessor::
     p.push_back(std::make_unique<juce::AudioParameterBool>("matchBypass","Match Bypass",false));
     p.push_back(std::make_unique<juce::AudioParameterBool>("transportSync","Transport Sync",false));
     p.push_back(std::make_unique<juce::AudioParameterFloat>("syncOffset","Sync Offset",-600.f,600.f,0.f));
+    p.push_back(std::make_unique<juce::AudioParameterChoice>("fftOrder","FFT Size",juce::StringArray{"1024","2048","4096"},1));
+    p.push_back(std::make_unique<juce::AudioParameterFloat>("fftSmoothing","FFT Smoothing",.01f,1.f,.22f));
+    p.push_back(std::make_unique<juce::AudioParameterChoice>("displayRate","Display Rate",juce::StringArray{"15 Hz","30 Hz","60 Hz"},1));
     return {p.begin(),p.end()};
 }
 ReferenceLabAudioProcessor::ReferenceLabAudioProcessor():AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true).withOutput("Output",juce::AudioChannelSet::stereo(),true)),state(*this,nullptr,"STATE",createLayout()),manager(juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("ReferenceLab").getChildFile("reference.json")){formats.registerBasicFormats();manager.load();}
