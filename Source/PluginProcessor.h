@@ -3,6 +3,8 @@
 #include <juce_audio_utils/juce_audio_utils.h>
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/CacheManager.h"
+#include "Audio/AnalysisEngine.h"
+#include "Audio/LoudnessMatcher.h"
 #include "Audio/ReferencePlayer.h"
 #include "Library/ReferenceManager.h"
 
@@ -24,10 +26,14 @@ public:
     referencelab::ReferencePlayer& getPlayer(){return player;}
     referencelab::ReferenceManager& getReferenceManager(){return manager;}
     referencelab::CacheManager& getCacheManager(){return cache;}
+    referencelab::MeterSnapshot getMixMeters()const{return mixAnalysis.snapshot();}
+    referencelab::MeterSnapshot getReferenceMeters()const{return referenceAnalysis.snapshot();}
+    referencelab::MeterSnapshot getOutputMeters()const{return outputAnalysis.snapshot();}
+    float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;
+    juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
     juce::AudioBuffer<float> referenceBuffer; std::atomic<bool> reference{false}; juce::SmoothedValue<float> blend;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };

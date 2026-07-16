@@ -2,6 +2,7 @@
 #include "Library/ReferenceModel.h"
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/ReferencePlayer.h"
+#include "Audio/AnalysisEngine.h"
 
 namespace {
 class ReferenceModelTests final : public juce::UnitTest {
@@ -63,6 +64,15 @@ public:
         juce::AudioBuffer<float> rendered(2,1);player.process(rendered);
         expectWithinAbsoluteError(rendered.getSample(0,0),0.1f,0.0001f);
         expectWithinAbsoluteError(rendered.getSample(1,0),-0.1f,0.0001f);
+
+        beginTest("Analysis metrics for correlated stereo");
+        juce::AudioBuffer<float> meterSignal(2,4800);meterSignal.clear();
+        for(int i=0;i<meterSignal.getNumSamples();++i){meterSignal.setSample(0,i,0.5f);meterSignal.setSample(1,i,0.5f);}
+        referencelab::AnalysisEngine analyser;analyser.prepare(48000.0);analyser.process(meterSignal);auto meters=analyser.snapshot();
+        expectWithinAbsoluteError(meters.peakDb,-6.0206f,0.02f);
+        expectWithinAbsoluteError(meters.rmsDb,-6.0206f,0.02f);
+        expectWithinAbsoluteError(meters.correlation,1.0f,0.001f);
+        expectWithinAbsoluteError(meters.stereoWidth,0.0f,0.001f);
     }
 };
 
