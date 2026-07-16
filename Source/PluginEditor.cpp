@@ -3,22 +3,37 @@ ReferenceLabEditor::ReferenceLabEditor(ReferenceLabAudioProcessor&x):AudioProces
     setResizable(true,true);setResizeLimits(760,480,1600,1000);setSize(1000,650);
     addAndMakeVisible(add);
     addAndMakeVisible(scan);
+    addAndMakeVisible(remove);
+    addAndMakeVisible(save);
     addAndMakeVisible(mix);
     addAndMakeVisible(ref);
     addAndMakeVisible(play);
     addAndMakeVisible(stop);
     addAndMakeVisible(title);
     addAndMakeVisible(search);
+    addAndMakeVisible(favouritesOnly);
+    addAndMakeVisible(editFavourite);
+    addAndMakeVisible(sort);
+    addAndMakeVisible(editTitle);
+    addAndMakeVisible(editArtist);
+    addAndMakeVisible(editGenre);
+    addAndMakeVisible(editBpm);
+    addAndMakeVisible(editTags);
     addAndMakeVisible(list);
     title.setText("ReferenceLab 1.0",juce::dontSendNotification);search.setTextToShowWhenEmpty("Cerca titolo, artista, album, genere, tag...",juce::Colours::grey);
-    search.onTextChange=[this]{refreshLibrary();};play.onClick=[this]{p.playReference();};stop.onClick=[this]{p.stopReference();};mix.onClick=[this]{p.setReference(false);};ref.onClick=[this]{p.setReference(true);};
+    editTitle.setTextToShowWhenEmpty("Titolo",juce::Colours::grey);editArtist.setTextToShowWhenEmpty("Artista",juce::Colours::grey);editGenre.setTextToShowWhenEmpty("Genere",juce::Colours::grey);editBpm.setTextToShowWhenEmpty("BPM",juce::Colours::grey);editTags.setTextToShowWhenEmpty("Tag separati da virgola",juce::Colours::grey);
+    sort.addItemList({"Titolo","Artista","Genere","BPM","Rating","Data aggiunta","Ultimo uso"},1);sort.setSelectedId(1,juce::dontSendNotification);
+    search.onTextChange=[this]{refreshLibrary();};favouritesOnly.onClick=[this]{refreshLibrary();};sort.onChange=[this]{refreshLibrary();};save.onClick=[this]{saveSelected();};remove.onClick=[this]{removeSelected();};play.onClick=[this]{p.playReference();};stop.onClick=[this]{p.stopReference();};mix.onClick=[this]{p.setReference(false);};ref.onClick=[this]{p.setReference(true);};
     add.onClick=[this]{auto chooser=std::make_shared<juce::FileChooser>("Scegli reference",juce::File{},"*.wav;*.aiff;*.aif;*.flac;*.mp3");chooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectFiles,[this,chooser](const juce::FileChooser&f){if(f.getResult().existsAsFile()){juce::String error;if(!p.loadFile(f.getResult(),error))showError(error);refreshLibrary();}});};
     scan.onClick=[this]{chooseFolder();};refreshLibrary();
 }
-void ReferenceLabEditor::refreshLibrary(){rows=p.getReferenceManager().search(search.getText());list.updateContent();list.repaint();}
+void ReferenceLabEditor::refreshLibrary(){referencelab::ReferenceFilter f;f.query=search.getText();f.favouritesOnly=favouritesOnly.getToggleState();f.sort=static_cast<referencelab::ReferenceSort>(juce::jmax(0,sort.getSelectedId()-1));rows=p.getReferenceManager().filter(f);list.updateContent();list.repaint();}
 void ReferenceLabEditor::showError(const juce::String&e){juce::NativeMessageBox::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon,"ReferenceLab",e);}
 void ReferenceLabEditor::chooseFolder(){auto chooser=std::make_shared<juce::FileChooser>("Cartella reference");chooser->launchAsync(juce::FileBrowserComponent::openMode|juce::FileBrowserComponent::canSelectDirectories,[this,chooser](const juce::FileChooser&f){if(f.getResult().isDirectory()){juce::String warning;p.getReferenceManager().scanFolder(f.getResult(),true,warning);if(warning.isNotEmpty())showError(warning);refreshLibrary();}});}
 void ReferenceLabEditor::paintListBoxItem(int row,juce::Graphics&g,int w,int h,bool selected){if(row<0||row>=getNumRows())return;if(selected)g.fillAll(juce::Colour(0xff315b78));auto lib=p.getReferenceManager().snapshot();auto file=rows[(size_t)row].resolveAgainst(lib.root);g.setColour(file.existsAsFile()?juce::Colours::white:juce::Colours::orangered);g.drawText(rows[(size_t)row].title+"  -  "+rows[(size_t)row].artist,10,0,w-20,h,juce::Justification::centredLeft,true);}
 void ReferenceLabEditor::listBoxItemDoubleClicked(int row,const juce::MouseEvent&){if(row<0||row>=getNumRows())return;auto file=rows[(size_t)row].resolveAgainst(p.getReferenceManager().snapshot().root);juce::String error;if(!p.loadFile(file,error))showError(error);else p.setReference(true);}
+void ReferenceLabEditor::selectedRowsChanged(int row){if(row<0||row>=getNumRows())return;auto&m=rows[(size_t)row];editTitle.setText(m.title,false);editArtist.setText(m.artist,false);editGenre.setText(m.genre,false);editBpm.setText(m.bpm?juce::String(*m.bpm,2):juce::String{},false);editTags.setText(m.tags.joinIntoString(", "),false);editFavourite.setToggleState(m.favourite,juce::dontSendNotification);}
+void ReferenceLabEditor::saveSelected(){auto row=list.getSelectedRow();if(row<0||row>=getNumRows())return;auto item=rows[(size_t)row];item.title=editTitle.getText().trim();item.artist=editArtist.getText().trim();item.genre=editGenre.getText().trim();item.favourite=editFavourite.getToggleState();item.tags=juce::StringArray::fromTokens(editTags.getText(),",","\"");item.tags.trim();item.tags.removeEmptyStrings();auto bpm=editBpm.getText().trim();item.bpm=bpm.isEmpty()?std::nullopt:std::optional<double>(bpm.getDoubleValue());juce::String error;if(!p.getReferenceManager().updateMetadata(item,error))showError(error);refreshLibrary();}
+void ReferenceLabEditor::removeSelected(){auto row=list.getSelectedRow();if(row<0||row>=getNumRows())return;juce::String error;if(!p.getReferenceManager().remove(rows[(size_t)row].uuid,error))showError(error);refreshLibrary();}
 void ReferenceLabEditor::paint(juce::Graphics&g){g.fillAll(juce::Colour(0xff10151d));g.setColour(juce::Colour(0xff263241));g.fillRoundedRectangle(getLocalBounds().reduced(16).toFloat(),10);}
-void ReferenceLabEditor::resized(){auto r=getLocalBounds().reduced(28);title.setBounds(r.removeFromTop(38));auto bar=r.removeFromTop(36);add.setBounds(bar.removeFromLeft(130));scan.setBounds(bar.removeFromLeft(170).reduced(4,0));search.setBounds(bar.removeFromLeft(330).reduced(4,0));ref.setBounds(bar.removeFromRight(110));mix.setBounds(bar.removeFromRight(85));auto controls=r.removeFromBottom(42);play.setBounds(controls.removeFromLeft(90));stop.setBounds(controls.removeFromLeft(90).reduced(4,0));r.removeFromTop(10);list.setBounds(r);}
+void ReferenceLabEditor::resized(){auto r=getLocalBounds().reduced(28);title.setBounds(r.removeFromTop(38));auto bar=r.removeFromTop(36);add.setBounds(bar.removeFromLeft(120));scan.setBounds(bar.removeFromLeft(160).reduced(4,0));remove.setBounds(bar.removeFromLeft(90).reduced(4,0));ref.setBounds(bar.removeFromRight(105));mix.setBounds(bar.removeFromRight(75));auto filters=r.removeFromTop(36);search.setBounds(filters.removeFromLeft(360));favouritesOnly.setBounds(filters.removeFromLeft(130));sort.setBounds(filters.removeFromLeft(150));auto editor=r.removeFromBottom(112);auto line=editor.removeFromTop(34);editTitle.setBounds(line.removeFromLeft(230));editArtist.setBounds(line.removeFromLeft(210).reduced(4,0));editGenre.setBounds(line.removeFromLeft(150).reduced(4,0));editBpm.setBounds(line.removeFromLeft(90).reduced(4,0));auto line2=editor.removeFromTop(36);editTags.setBounds(line2.removeFromLeft(440));editFavourite.setBounds(line2.removeFromLeft(110));save.setBounds(line2.removeFromLeft(140));play.setBounds(line2.removeFromLeft(75).reduced(4,0));stop.setBounds(line2.removeFromLeft(75).reduced(4,0));r.removeFromTop(8);list.setBounds(r);}

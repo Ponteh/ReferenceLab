@@ -22,10 +22,10 @@ bool MetadataRepository::save(const ReferenceLibrary& lib, juce::String& error) 
     o->setProperty("libraryName",lib.name); o->setProperty("rootPath",lib.root.getFullPathName());
     juce::Array<juce::var> refs; for(auto& r:lib.references) refs.add(r.toVar()); o->setProperty("references",refs);
     file.getParentDirectory().createDirectory();
-    auto temp=file.getSiblingFile(file.getFileName()+".tmp");
-    if(!temp.replaceWithText(juce::JSON::toString(juce::var(o),true))) { error="Impossibile scrivere il file temporaneo"; return false; }
+    juce::TemporaryFile temp(file);
+    if(!temp.getFile().replaceWithText(juce::JSON::toString(juce::var(o),true))) { error="Impossibile scrivere il file temporaneo"; return false; }
     if(file.existsAsFile()) file.copyFileTo(file.getSiblingFile("reference.json.bak"));
-    if(!temp.moveFileTo(file)) { error="Impossibile sostituire reference.json"; return false; }
+    if(!temp.overwriteTargetFileWithTemporary()) { error="Impossibile sostituire reference.json"; return false; }
     return true;
 }
 } // namespace referencelab

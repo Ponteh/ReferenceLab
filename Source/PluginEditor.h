@@ -8,8 +8,9 @@ private:
     int getNumRows() override{return (int)rows.size();}
     void paintListBoxItem(int,juce::Graphics&,int,int,bool) override;
     void listBoxItemDoubleClicked(int,const juce::MouseEvent&) override;
-    void refreshLibrary(); void chooseFolder(); void showError(const juce::String&);
-    ReferenceLabAudioProcessor&p;juce::TextButton add{"Aggiungi file"},scan{"Scansiona cartella"},mix{"MIX"},ref{"REFERENCE"},play{"Play"},stop{"Stop"};
-    juce::Label title;juce::TextEditor search;juce::ListBox list{"Reference library",this};
+    void selectedRowsChanged(int) override;
+    void refreshLibrary(); void chooseFolder(); void showError(const juce::String&); void saveSelected(); void removeSelected();
+    ReferenceLabAudioProcessor&p;juce::TextButton add{"Aggiungi file"},scan{"Scansiona cartella"},remove{"Rimuovi"},save{"Salva metadati"},mix{"MIX"},ref{"REFERENCE"},play{"Play"},stop{"Stop"};
+    juce::Label title;juce::TextEditor search,editTitle,editArtist,editGenre,editBpm,editTags;juce::ToggleButton favouritesOnly{"Solo preferiti"},editFavourite{"Preferita"};juce::ComboBox sort;juce::ListBox list{"Reference library",this};
     std::vector<referencelab::ReferenceMetadata> rows;
 };
