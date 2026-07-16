@@ -5,6 +5,7 @@
 #include "Audio/CacheManager.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/LoudnessMatcher.h"
+#include "Audio/SampleFifo.h"
 #include "Audio/ReferencePlayer.h"
 #include "Library/ReferenceManager.h"
 
@@ -30,10 +31,12 @@ public:
     referencelab::MeterSnapshot getReferenceMeters()const{return referenceAnalysis.snapshot();}
     referencelab::MeterSnapshot getOutputMeters()const{return outputAnalysis.snapshot();}
     float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
+    referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
     juce::AudioBuffer<float> referenceBuffer; std::atomic<bool> reference{false}; juce::SmoothedValue<float> blend;
+    referencelab::SampleFifo mixFifo,referenceFifo,outputFifo;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };

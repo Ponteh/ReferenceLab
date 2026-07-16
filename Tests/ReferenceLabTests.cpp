@@ -3,6 +3,7 @@
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
+#include "Audio/SampleFifo.h"
 
 namespace {
 class ReferenceModelTests final : public juce::UnitTest {
@@ -73,6 +74,10 @@ public:
         expectWithinAbsoluteError(meters.rmsDb,-6.0206f,0.02f);
         expectWithinAbsoluteError(meters.correlation,1.0f,0.001f);
         expectWithinAbsoluteError(meters.stereoWidth,0.0f,0.001f);
+
+        beginTest("Lock-free sample FIFO preserves mono sum");
+        referencelab::SampleFifo fifo;juce::AudioBuffer<float> fifoInput(2,2);fifoInput.setSample(0,0,1.f);fifoInput.setSample(1,0,-1.f);fifoInput.setSample(0,1,.5f);fifoInput.setSample(1,1,.5f);fifo.push(fifoInput);float fifoOutput[2]{};
+        expectEquals(fifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],0.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],.5f,.0001f);
     }
 };
 
