@@ -4,9 +4,15 @@
 #include <memory>
 
 namespace referencelab {
+struct ReferenceAudioData {
+    juce::AudioBuffer<float> samples;
+    double sampleRate = 44100.0;
+    std::size_t bytes() const noexcept { return static_cast<std::size_t>(samples.getNumChannels()) * static_cast<std::size_t>(samples.getNumSamples()) * sizeof(float); }
+};
 class ReferencePlayer {
 public:
     bool load(const juce::File&, juce::AudioFormatManager&, juce::String& error);
+    void setAudio(std::shared_ptr<ReferenceAudioData>) noexcept;
     void prepare(double hostSampleRate) noexcept;
     void process(juce::AudioBuffer<float>&) noexcept;
     void play() noexcept { playing.store(true); }
@@ -20,8 +26,7 @@ public:
     double getPositionSeconds() const noexcept;
     double getDurationSeconds() const noexcept;
 private:
-    struct AudioData { juce::AudioBuffer<float> samples; double sampleRate = 44100.0; };
-    std::atomic<std::shared_ptr<AudioData>> audio;
+    std::atomic<std::shared_ptr<ReferenceAudioData>> audio;
     std::atomic<bool> playing { false }, loopEnabled { false };
     std::atomic<double> position { 0.0 }, hostRate { 44100.0 }, startOffset { 0.0 }, loopStart { 0.0 }, loopEnd { 0.0 };
 };

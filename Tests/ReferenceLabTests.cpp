@@ -1,6 +1,7 @@
 #include <juce_core/juce_core.h>
 #include "Library/ReferenceModel.h"
 #include "Audio/ComparisonProcessor.h"
+#include "Audio/ReferencePlayer.h"
 
 namespace {
 class ReferenceModelTests final : public juce::UnitTest {
@@ -53,6 +54,15 @@ public:
         referencelab::ComparisonProcessor::applyListeningMode(signal,referencelab::ListeningMode::side);
         expectWithinAbsoluteError(signal.getSample(0,0),1.0f,0.0001f);
         expectWithinAbsoluteError(signal.getSample(1,0),-1.0f,0.0001f);
+
+        beginTest("Reference player renders cached audio");
+        auto audio=std::make_shared<referencelab::ReferenceAudioData>();
+        audio->sampleRate=48000.0;audio->samples.setSize(2,4);
+        audio->samples.setSample(0,0,0.1f);audio->samples.setSample(1,0,-0.1f);
+        referencelab::ReferencePlayer player;player.prepare(48000.0);player.setAudio(audio);player.play();
+        juce::AudioBuffer<float> rendered(2,1);player.process(rendered);
+        expectWithinAbsoluteError(rendered.getSample(0,0),0.1f,0.0001f);
+        expectWithinAbsoluteError(rendered.getSample(1,0),-0.1f,0.0001f);
     }
 };
 

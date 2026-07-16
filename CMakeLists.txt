@@ -54,7 +54,8 @@ if (REFERENCELAB_BUILD_TESTS)
         Tests/ReferenceLabTests.cpp
         Source/Library/ReferenceModel.cpp
         Source/Library/MetadataRepository.cpp
-        Source/Audio/ComparisonProcessor.cpp)
+        Source/Audio/ComparisonProcessor.cpp
+        Source/Audio/ReferencePlayer.cpp)
     target_include_directories(ReferenceLabTests PRIVATE Source)
     target_compile_definitions(ReferenceLabTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
     target_link_libraries(ReferenceLabTests PRIVATE

@@ -26,6 +26,7 @@ void ReferenceLabAudioProcessor::processBlock(juce::AudioBuffer<float>&mix,juce:
     for(int i=0;i<mix.getNumSamples();++i){auto a=blend.getNextValue();for(int c=0;c<mix.getNumChannels();++c)mix.setSample(c,i,mix.getSample(c,i)*(1.f-a)+referenceBuffer.getSample(c,i)*a);}
 }
 bool ReferenceLabAudioProcessor::loadFile(const juce::File&f,juce::String&e){auto ok=player.load(f,formats,e);if(ok){juce::String catalogError;manager.addFile(f,catalogError);player.play();}return ok;}
+void ReferenceLabAudioProcessor::loadFileAsync(const juce::File&f,std::function<void(const juce::String&)>done){if(!f.existsAsFile()){if(done)done("File non trovato");return;}cache.loadAsync(f,[this,f,done=std::move(done)](std::shared_ptr<referencelab::ReferenceAudioData>data,const juce::String&error,bool){if(data){player.setAudio(std::move(data));player.play();juce::String catalogError;manager.addFile(f,catalogError);}if(done)done(error);});}
 void ReferenceLabAudioProcessor::getStateInformation(juce::MemoryBlock&m){auto v=state.copyState();v.setProperty("reference",reference.load(),nullptr);if(auto xml=v.createXml())copyXmlToBinary(*xml,m);}
 void ReferenceLabAudioProcessor::setStateInformation(const void*d,int n){if(auto xml=getXmlFromBinary(d,n)){auto v=juce::ValueTree::fromXml(*xml);if(v.isValid()){reference.store((bool)v.getProperty("reference"));state.replaceState(v);}}}
 juce::AudioProcessorEditor* ReferenceLabAudioProcessor::createEditor(){return new ReferenceLabEditor(*this);} juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter(){return new ReferenceLabAudioProcessor();}

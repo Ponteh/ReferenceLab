@@ -6,13 +6,14 @@ bool ReferencePlayer::load(const juce::File& file, juce::AudioFormatManager& for
     std::unique_ptr<juce::AudioFormatReader> reader(formats.createReaderFor(file));
     if (!reader) { error = "Formato audio non supportato o file non valido"; return false; }
     if (reader->lengthInSamples <= 0 || reader->lengthInSamples > std::numeric_limits<int>::max()) { error = "Durata file non supportata"; return false; }
-    auto next = std::make_shared<AudioData>();
+    auto next = std::make_shared<ReferenceAudioData>();
     next->sampleRate = reader->sampleRate;
     next->samples.setSize(2, static_cast<int>(reader->lengthInSamples));
     if (!reader->read(&next->samples, 0, next->samples.getNumSamples(), 0, true, true)) { error = "Errore durante la decodifica"; return false; }
     if (reader->numChannels == 1) next->samples.copyFrom(1, 0, next->samples, 0, 0, next->samples.getNumSamples());
-    audio.store(std::move(next), std::memory_order_release); position.store(startOffset.load()); return true;
+    setAudio(std::move(next)); return true;
 }
+void ReferencePlayer::setAudio(std::shared_ptr<ReferenceAudioData> next) noexcept { audio.store(std::move(next),std::memory_order_release);position.store(startOffset.load()); }
 void ReferencePlayer::prepare(double rate) noexcept { hostRate.store(rate > 0.0 ? rate : 44100.0); }
 void ReferencePlayer::stop() noexcept { playing.store(false); position.store(startOffset.load()); }
 void ReferencePlayer::seek(double seconds) noexcept { position.store(juce::jmax(0.0, seconds)); }

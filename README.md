@@ -12,3 +12,5 @@ cmake --build build --config Release --target ReferenceLab_VST3
 La prima configurazione scarica JUCE 8.0.8. Il VST3 viene generato sotto `build/ReferenceLab_artefacts/Release/VST3`.
 
 La modalità Safe Export è attiva per impostazione predefinita: durante `isNonRealtime()` passa soltanto il mix.
+
+La v1 include libreria JSON locale, scansione ricorsiva, ricerca e metadati modificabili, player con loop/seek/resampling, cache LRU asincrona configurabile, confronto A/B, EQ simmetrico e modalità Stereo/Mono/Mid/Side.
