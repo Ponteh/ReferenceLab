@@ -23,6 +23,7 @@ public:
     void getStateInformation(juce::MemoryBlock&)override; void setStateInformation(const void*,int)override;
     bool loadFile(const juce::File&,juce::String&); void setReference(bool b){reference.store(b);} bool isReference()const{return reference.load();}
     void loadFileAsync(const juce::File&,std::function<void(const juce::String&)>);
+    bool saveComparisonPreset(const juce::File&,juce::String&);bool loadComparisonPreset(const juce::File&,juce::String&);
     void playReference(){player.play();} void pauseReference(){player.pause();} void stopReference(){player.stop();}
     referencelab::ReferencePlayer& getPlayer(){return player;}
     referencelab::ReferenceManager& getReferenceManager(){return manager;}
@@ -31,6 +32,7 @@ public:
     referencelab::MeterSnapshot getReferenceMeters()const{return referenceAnalysis.snapshot();}
     referencelab::MeterSnapshot getOutputMeters()const{return outputAnalysis.snapshot();}
     float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
+    bool isTransportAvailable()const{return transportAvailable.load();}
     referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}
     juce::AudioProcessorValueTreeState state;
 private:
@@ -38,5 +40,6 @@ private:
     juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
     juce::AudioBuffer<float> referenceBuffer;std::atomic<bool>reference{false};float blendCurrent=0.f,blendTarget=0.f,blendStep=0.f;int blendRemaining=0;
     referencelab::SampleFifo mixFifo,referenceFifo,outputFifo;
+    mutable juce::CriticalSection activeFileLock;juce::File activeFile;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };
