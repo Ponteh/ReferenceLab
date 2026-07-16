@@ -9,9 +9,10 @@ namespace referencelab {
 class AnalysisDisplay final:public juce::Component,private juce::Timer{
 public:AnalysisDisplay(SampleFifo&mix,SampleFifo&reference,SampleFifo&output);
     void paint(juce::Graphics&)override;
+    void setFrozen(bool value)noexcept{frozen=value;}
 private:
     static constexpr int order=11,size=1<<order;
-    SampleFifo&mixFifo,&referenceFifo,&outputFifo;juce::dsp::FFT fft{order};juce::dsp::WindowingFunction<float>window{size,juce::dsp::WindowingFunction<float>::hann};
+    SampleFifo&mixFifo,&referenceFifo,&outputFifo;juce::dsp::FFT fft{order};juce::dsp::WindowingFunction<float>window{size,juce::dsp::WindowingFunction<float>::hann};bool frozen=false;
     std::array<float,size>mixTime{},referenceTime{},outputTime{},scratch{};std::array<float,size*2>mixFft{},referenceFft{};std::array<float,size/2>mixSpectrum{},referenceSpectrum{};
     void timerCallback()override;void consume(SampleFifo&,std::array<float,size>&);void calculate(const std::array<float,size>&,std::array<float,size*2>&,std::array<float,size/2>&);juce::Path spectrumPath(const std::array<float,size/2>&,juce::Rectangle<float>)const;
 };

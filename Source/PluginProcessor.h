@@ -33,6 +33,7 @@ public:
     referencelab::MeterSnapshot getOutputMeters()const{return outputAnalysis.snapshot();}
     float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
     bool isTransportAvailable()const{return transportAvailable.load();}
+    void resetMeters()noexcept{mixAnalysis.reset();referenceAnalysis.reset();outputAnalysis.reset();}
     referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}
     juce::AudioProcessorValueTreeState state;
 private:

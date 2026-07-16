@@ -4,6 +4,7 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/SampleFifo.h"
+#include <cmath>
 
 namespace {
 class ReferenceModelTests final : public juce::UnitTest {
@@ -78,6 +79,15 @@ public:
         expectWithinAbsoluteError(meters.rmsDb,-6.0206f,0.02f);
         expectWithinAbsoluteError(meters.correlation,1.0f,0.001f);
         expectWithinAbsoluteError(meters.stereoWidth,0.0f,0.001f);
+
+        beginTest("K-weighted gated integrated loudness");
+        referencelab::AnalysisEngine loudness; loudness.prepare(48000.0);
+        juce::AudioBuffer<float> tone(2,480);double phase=0.0;
+        for(int block=0;block<400;++block){for(int i=0;i<tone.getNumSamples();++i){auto sample=.1f*(float)std::sin(phase);phase+=2.0*juce::MathConstants<double>::pi*1000.0/48000.0;tone.setSample(0,i,sample);tone.setSample(1,i,sample);}loudness.process(tone);}
+        auto loudnessResult=loudness.snapshot();expectWithinAbsoluteError(loudnessResult.integratedLufs,-20.0f,1.5f);
+
+        beginTest("Comparison bypass remains transparent");
+        referencelab::ComparisonProcessor transparent;transparent.prepare(48000.0,16);referencelab::ComparisonSettings transparentSettings;transparentSettings.bypass=true;transparent.update(transparentSettings);juce::AudioBuffer<float> transparentMix(2,16),transparentRef(2,16);for(int i=0;i<16;++i){transparentMix.setSample(0,i,(float)i/16.f);transparentMix.setSample(1,i,-(float)i/16.f);transparentRef.setSample(0,i,.25f);transparentRef.setSample(1,i,-.25f);}juce::AudioBuffer<float> expectedMix(transparentMix),expectedRef(transparentRef);transparent.process(transparentMix,transparentRef);for(int c=0;c<2;++c)for(int i=0;i<16;++i){expectWithinAbsoluteError(transparentMix.getSample(c,i),expectedMix.getSample(c,i),.000001f);expectWithinAbsoluteError(transparentRef.getSample(c,i),expectedRef.getSample(c,i),.000001f);}
 
         beginTest("Lock-free sample FIFO preserves mono sum");
         referencelab::SampleFifo fifo;juce::AudioBuffer<float> fifoInput(2,2);fifoInput.setSample(0,0,1.f);fifoInput.setSample(1,0,-1.f);fifoInput.setSample(0,1,.5f);fifoInput.setSample(1,1,.5f);fifo.push(fifoInput);float fifoOutput[2]{};

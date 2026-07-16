@@ -76,6 +76,158 @@ La versione 2 estende il sistema con:
 - sincronizzazione avanzata con il transport della DAW;
 - waveform completa;
 - provider di reference modulari;
+-Miglioramenti dell’interfaccia grafica e delle visualizzazioni
+
+La versione 2 deve introdurre un’interfaccia grafica più chiara, coerente e flessibile, con particolare attenzione alla leggibilità delle informazioni e alla velocità del confronto tra Mix e Reference.
+
+#### Visualizzazione dello spettro e della curva EQ
+
+Il pannello dello spettro deve mostrare contemporaneamente:
+
+* lo spettro del Mix;
+* lo spettro della Reference;
+* la curva di risposta dell’EQ di confronto;
+* l’effetto complessivo dei filtri High Pass, Bell e Low Pass;
+* una griglia con valori numerici sugli assi;
+* una legenda delle sorgenti e degli elementi visualizzati.
+
+L’asse orizzontale deve rappresentare la frequenza in Hz, preferibilmente con scala logaritmica, mostrando valori di riferimento come:
+
+* 20 Hz;
+* 50 Hz;
+* 100 Hz;
+* 200 Hz;
+* 500 Hz;
+* 1 kHz;
+* 2 kHz;
+* 5 kHz;
+* 10 kHz;
+* 20 kHz.
+
+L’asse verticale deve mostrare il livello in dB e, quando l’EQ è visualizzato, il relativo guadagno o attenuazione.
+
+La curva dell’EQ deve aggiornarsi dinamicamente durante la modifica dei parametri e deve permettere di comprendere immediatamente quali frequenze vengono isolate, attenuate o enfatizzate.
+
+La legenda deve indicare chiaramente almeno:
+
+* Mix;
+* Reference;
+* curva EQ;
+* eventuale spettro medio o congelato.
+
+#### Coerenza cromatica
+
+A ogni sorgente deve essere assegnato un colore principale coerente in tutta l’interfaccia.
+
+Esempio:
+
+* Mix: azzurro;
+* Reference: arancione.
+
+Il colore assegnato deve essere utilizzato per tutti gli elementi associati alla sorgente, inclusi:
+
+* spettro FFT;
+* waveform;
+* meter;
+* valori LUFS;
+* Peak;
+* RMS;
+* Crest Factor;
+* Dynamic Range;
+* Correlation Meter;
+* Stereo Width;
+* indicatori e label;
+* eventuali marker o bordi dei pannelli.
+
+I colori devono essere configurabili dalle impostazioni del plugin.
+
+La distinzione tra Mix e Reference non deve dipendere esclusivamente dal colore. Ogni elemento deve includere anche un’etichetta, un simbolo o uno stile grafico riconoscibile.
+
+#### Waveform completa e marker della Reference
+
+Il pannello della Reference deve mostrare la forma d’onda completa del file audio.
+
+Sopra la waveform devono essere visualizzati i seguenti marker:
+
+* **Starting Point:** punto iniziale della riproduzione o del loop;
+* **Current Point:** posizione corrente di riproduzione;
+* **End Point:** punto finale del loop.
+
+Il marker Current Point deve essere sempre visibile e deve muoversi dinamicamente durante la riproduzione.
+
+I marker Starting Point ed End Point devono essere visualizzati quando la modalità Loop è attiva o durante la configurazione dell’intervallo di loop.
+
+L’utente deve poter:
+
+* trascinare i marker direttamente sulla waveform;
+* modificare numericamente la loro posizione;
+* effettuare zoom orizzontale;
+* scorrere la waveform;
+* ripristinare rapidamente il loop all’intera durata del file;
+* salvare i marker nei metadati della Reference.
+
+La zona compresa tra Starting Point ed End Point deve essere evidenziata graficamente.
+
+La waveform deve indicare chiaramente:
+
+* durata totale;
+* tempo corrente;
+* durata della selezione;
+* stato del loop;
+* stato di riproduzione;
+* eventuale offset iniziale.
+
+#### Layout dinamico e organizzazione dei pannelli
+
+L’interfaccia deve essere riorganizzata in pannelli funzionali chiaramente separati.
+
+Pannelli principali:
+
+* Reference Library;
+* Reference Player e Waveform;
+* A/B e Loudness Matching;
+* EQ di confronto;
+* Spectrum Analyzer;
+* Meter e analizzatori;
+* Impostazioni.
+
+I pannelli devono poter utilizzare, dove appropriato:
+
+* sezioni espandibili e comprimibili;
+* menu a tendina;
+* tab;
+* finestre ridimensionabili;
+* separatori trascinabili;
+* pannelli mobili o ancorabili;
+* viste compatte e dettagliate.
+
+Gli strumenti meno utilizzati non devono occupare permanentemente spazio nell’interfaccia e devono poter essere raccolti in sezioni richiudibili.
+
+Il layout deve adattarsi automaticamente alle dimensioni della finestra del plugin, mantenendo leggibili i controlli principali.
+
+L’utente deve poter ridimensionare la finestra e, se tecnicamente sostenibile, modificare le proporzioni tra i pannelli.
+
+Lo stato del layout deve essere salvato e ripristinato con il plugin, includendo:
+
+* pannelli aperti o chiusi;
+* dimensioni della finestra;
+* posizione dei separatori;
+* tab selezionata;
+* modalità compatta o completa.
+
+#### Obiettivo dell’interfaccia
+
+L’interfaccia della versione 2 deve consentire all’utente di identificare immediatamente:
+
+* quale sorgente è in ascolto;
+* quale sorgente appartiene a ogni misurazione;
+* quale intervallo della Reference è in loop;
+* quale parte dello spettro viene influenzata dall’EQ;
+* quali strumenti di analisi sono attivi;
+* lo stato di caricamento, sincronizzazione e riproduzione della Reference.
+
+Il layout deve privilegiare chiarezza, coerenza visiva e rapidità di utilizzo, evitando pannelli sovraccarichi o informazioni duplicate.
+
 - uso libreiria grafica professionale tramite la repo https://github.com/ffAudio/foleys_gui_magic
 - aggiunta metere di Airwindows (file presenti nella cartella Meter-0.2.8) o alla repo https://github.com/airwindows/Meter/
 

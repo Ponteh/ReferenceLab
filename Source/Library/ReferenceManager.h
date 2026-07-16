@@ -9,6 +9,7 @@ struct ReferenceFilter {
     juce::String query;
     bool favouritesOnly = false;
     int minimumRating = 0;
+    juce::String artist,genre,musicalKey;double minimumBpm=0,maximumBpm=999;
     ReferenceSort sort = ReferenceSort::title;
     bool ascending = true;
 };
@@ -20,6 +21,7 @@ public:
     int scanFolder(const juce::File&,bool recursive,juce::String& warning);
     bool remove(const juce::String& uuid,juce::String& error);
     bool updateMetadata(const ReferenceMetadata&,juce::String& error);
+    bool relink(const juce::String&uuid,const juce::File&,juce::String&error);
     std::vector<ReferenceMetadata> search(const juce::String& query) const;
     std::vector<ReferenceMetadata> filter(const ReferenceFilter&) const;
     ReferenceLibrary snapshot() const;
