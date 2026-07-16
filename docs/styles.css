@@ -104,6 +104,8 @@ h1 em { color: var(--blue); font-style: normal; }
 .wave-bars { position: absolute; inset: 12px 0; opacity: .6; background: repeating-linear-gradient(90deg, transparent 0 2px, var(--orange) 2px 3px, transparent 3px 6px); clip-path: polygon(0 45%,4% 25%,8% 48%,12% 18%,16% 60%,20% 35%,24% 73%,28% 22%,32% 56%,36% 12%,40% 65%,44% 35%,48% 80%,52% 20%,56% 58%,60% 30%,64% 73%,68% 38%,72% 62%,76% 22%,80% 52%,84% 35%,88% 70%,92% 38%,96% 55%,100% 42%,100% 58%,0 58%); }
 .marker { position: absolute; z-index: 2; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.5); color: white; font-size: .48rem; }
 .marker.start { left: 18%; }.marker.current { left: 52%; background: var(--blue); box-shadow: 0 0 8px var(--blue); }.marker.end { left: 83%; }
+.concept-note { margin: 0; padding: .8rem 1rem; border-top: 1px solid var(--line); color: #7f8998; background: rgba(255,255,255,.015); font-size: .62rem; line-height: 1.5; }
+.concept-note strong { color: #b9c2ce; font-weight: 720; }
 
 .section { padding: 7.5rem 0; border-top: 1px solid var(--line); }
 .intro { display: grid; grid-template-columns: 1fr 1fr; gap: 8%; }
