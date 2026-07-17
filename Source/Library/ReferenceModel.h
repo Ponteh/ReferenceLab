@@ -44,6 +44,7 @@ struct ReferencePlaylist {
     juce::StringArray referenceIds;
     int currentIndex = -1;
     bool add(const juce::String&); bool remove(const juce::String&);
+    bool move(const juce::String&,int delta);
     juce::String current() const; juce::String selectRelative(int);
     juce::var toVar() const;
     static std::optional<ReferencePlaylist> fromVar(const juce::var&, juce::String& error);

@@ -48,7 +48,7 @@ private:
     juce::AudioBuffer<float> referenceBuffer;std::atomic<bool>reference{false};float blendCurrent=0.f,blendTarget=0.f,blendStep=0.f;int blendRemaining=0;
     referencelab::SampleFifo mixFifo,referenceFifo,outputFifo;
     referencelab::TransportController transportController;
-    mutable juce::CriticalSection activeFileLock;juce::File activeFile;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
+    mutable juce::CriticalSection activeSourceLock;juce::String activeSource;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
     std::shared_ptr<int> lifetimeToken{std::make_shared<int>(0)};juce::ThreadPool remoteDownloadPool{1};std::atomic<RemoteLoadState>remoteLoadState{RemoteLoadState::idle};std::atomic<float>remoteLoadProgress{0};std::atomic<std::uint64_t>remoteLoadGeneration{0},catalogImportGeneration{0};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };

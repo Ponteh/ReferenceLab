@@ -28,12 +28,18 @@ public:
     bool createPlaylist(const juce::String& name,juce::String& error);
     bool addToPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
     bool removeFromPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
+    bool renamePlaylist(const juce::String&playlistId,const juce::String&name,juce::String&error);
+    bool deletePlaylist(const juce::String&playlistId,juce::String&error);
+    bool movePlaylistItem(const juce::String&playlistId,const juce::String&referenceId,int delta,juce::String&error);
     std::optional<ReferenceMetadata> selectPlaylistRelative(const juce::String& playlistId,int delta,juce::String& error);
     std::vector<ReferencePlaylist> playlistsSnapshot() const;
     std::vector<LibraryDescriptor> librariesSnapshot()const;
     juce::String activeLibraryId()const;
     bool createLibrary(const juce::String&,const juce::File&,juce::String&error);
     bool switchLibrary(const juce::String&,juce::String&error);
+    bool renameLibrary(const juce::String&id,const juce::String&name,juce::String&error);
+    bool unregisterLibrary(const juce::String&id,juce::String&error);
+    bool relinkLibrary(const juce::String&id,const juce::File&folder,juce::String&error);
     bool remove(const juce::String& uuid,juce::String& error);
     bool updateMetadata(const ReferenceMetadata&,juce::String& error);
     bool relink(const juce::String&uuid,const juce::File&,juce::String&error);
