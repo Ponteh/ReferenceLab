@@ -6,6 +6,7 @@
 #include <mutex>
 
 namespace referencelab {
+struct LibraryDescriptor { juce::String id,name; juce::File database; };
 enum class ReferenceSort { title, artist, genre, bpm, rating, dateAdded, lastUsed };
 struct ReferenceFilter {
     juce::String query;
@@ -28,6 +29,10 @@ public:
     bool removeFromPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
     std::optional<ReferenceMetadata> selectPlaylistRelative(const juce::String& playlistId,int delta,juce::String& error);
     std::vector<ReferencePlaylist> playlistsSnapshot() const;
+    std::vector<LibraryDescriptor> librariesSnapshot()const;
+    juce::String activeLibraryId()const;
+    bool createLibrary(const juce::String&,const juce::File&,juce::String&error);
+    bool switchLibrary(const juce::String&,juce::String&error);
     bool remove(const juce::String& uuid,juce::String& error);
     bool updateMetadata(const ReferenceMetadata&,juce::String& error);
     bool relink(const juce::String&uuid,const juce::File&,juce::String&error);
@@ -36,8 +41,9 @@ public:
     ReferenceLibrary snapshot() const;
     juce::String getLastWarning() const;
 private:
-    mutable std::mutex mutex; MetadataRepository repository; juce::File playlistsFile; LocalReferenceProvider local; JsonCatalogProvider catalog; HttpReferenceProvider http; ReferenceLibrary library; std::vector<ReferencePlaylist> playlists; juce::String lastWarning;
+    mutable std::mutex mutex; MetadataRepository repository; juce::File playlistsFile,registryFile; std::vector<LibraryDescriptor> libraries;juce::String activeLibrary;LocalReferenceProvider local; JsonCatalogProvider catalog; HttpReferenceProvider http; ReferenceLibrary library; std::vector<ReferencePlaylist> playlists; juce::String lastWarning;
     bool savePlaylists(const std::vector<ReferencePlaylist>&,juce::String& error) const;
+    bool saveRegistry(const std::vector<LibraryDescriptor>&,const juce::String&,juce::String&error)const;
     static bool matches(const ReferenceMetadata&,const juce::String&);
 };
 }
