@@ -63,6 +63,7 @@ if (REFERENCELAB_BUILD_TESTS)
         Source/Audio/ReferencePlayer.cpp
         Source/Audio/AnalysisEngine.cpp
         Source/Audio/LoudnessMatcher.cpp)
+    target_sources(ReferenceLabTests PRIVATE Source/Audio/TransportController.cpp)
     target_include_directories(ReferenceLabTests PRIVATE Source)
     target_compile_definitions(ReferenceLabTests PRIVATE JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0)
     target_link_libraries(ReferenceLabTests PRIVATE

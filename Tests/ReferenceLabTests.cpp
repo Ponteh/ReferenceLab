@@ -5,6 +5,7 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/SampleFifo.h"
+#include "Audio/TransportController.h"
 #include "Library/JsonCatalogProvider.h"
 #include "Library/HttpReferenceProvider.h"
 #include "Library/ReferenceManager.h"
@@ -103,6 +104,7 @@ public:
         beginTest("HTTP provider validates URLs");referencelab::HttpReferenceProvider http;expect(http.supportsUrl(juce::URL("https://example.com/reference.flac")));expect(!http.supportsUrl(juce::URL("ftp://example.com/reference.wav")));auto remote=http.inspectUrl(juce::URL("https://example.com/reference.wav"),urlError);expect(remote.has_value(),urlError);
         beginTest("Playlist cycles and round trips JSON");referencelab::ReferencePlaylist playlist;playlist.name="Mastering";expect(playlist.add("a"));expect(playlist.add("b"));expectEquals(playlist.selectRelative(1),juce::String("b"));auto restored=referencelab::ReferencePlaylist::fromVar(playlist.toVar(),urlError);expect(restored.has_value(),urlError);if(restored)expectEquals(restored->referenceIds.size(),2);
         beginTest("Manager persists playlists and quick selection");auto playlistDirectory=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("ReferenceLabPlaylistTests",{},false);playlistDirectory.createDirectory();referencelab::ReferenceManager playlistManager(playlistDirectory.getChildFile("reference.json"));expect(playlistManager.addUrl("https://example.com/one.mp3",urlError),urlError);expect(playlistManager.createPlaylist("A/B",urlError),urlError);auto playlistLibrary=playlistManager.snapshot();auto savedPlaylists=playlistManager.playlistsSnapshot();expectEquals((int)savedPlaylists.size(),1);if(!savedPlaylists.empty()&&!playlistLibrary.references.empty()){expect(playlistManager.addToPlaylist(savedPlaylists[0].id,playlistLibrary.references[0].uuid,urlError),urlError);auto selected=playlistManager.selectPlaylistRelative(savedPlaylists[0].id,1,urlError);expect(selected.has_value(),urlError);}referencelab::ReferenceManager reloadedPlaylists(playlistDirectory.getChildFile("reference.json"));reloadedPlaylists.load();expectEquals((int)reloadedPlaylists.playlistsSnapshot().size(),1);playlistDirectory.deleteRecursively();
+        beginTest("Advanced transport modes");referencelab::TransportController transport;auto timeline=transport.update(125.0,true,60.0,0.0,referencelab::TransportSyncMode::timeline);expect(timeline.available&&timeline.seek);expectWithinAbsoluteError(timeline.positionSeconds,5.0,0.0001);transport.reset();auto stoppedTransport=transport.update(10.0,false,60.0,3.0,referencelab::TransportSyncMode::restartOnPlay);expect(stoppedTransport.pause&&!stoppedTransport.seek);auto startedTransport=transport.update(10.1,true,60.0,3.0,referencelab::TransportSyncMode::restartOnPlay);expect(startedTransport.play&&startedTransport.seek);expectWithinAbsoluteError(startedTransport.positionSeconds,3.0,0.0001);auto unavailable=transport.update(std::nullopt,true,60.0,0.0,referencelab::TransportSyncMode::timeline);expect(!unavailable.available);
     }
 };
 
