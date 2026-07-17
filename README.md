@@ -1,4 +1,4 @@
-# ReferenceLab 1.0
+# ReferenceLab 2.0
 
 Plugin VST3/Standalone C++20 basato su JUCE per il confronto A/B con reference locali.
 
@@ -24,7 +24,11 @@ La v1 include libreria JSON locale, scansione ricorsiva, ricerca e metadati modi
 
 Safe Export è attivo per impostazione predefinita. Alcuni host potrebbero non comunicare correttamente la modalità non real-time: verificare sempre un export di prova nella DAW utilizzata.
 
-## Stato della versione 1
+## Novita della versione 2
+
+La v2 introduce l'architettura per cataloghi JSON esterni, reference HTTP/HTTPS validate, playlist e cambio rapido multi-reference. Il provider Cambridge MT resta disabilitato finche non saranno completate verifica tecnica e autorizzazione legale.
+
+## Stato
 
 Il core VST3 è implementato. Prima della distribuzione pubblica sono obbligatori test manuali in almeno tre DAW Windows, misure CPU/latency e validazione delle metriche con segnali di laboratorio.
 

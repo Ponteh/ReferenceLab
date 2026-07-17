@@ -5,6 +5,8 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/SampleFifo.h"
+#include "Library/JsonCatalogProvider.h"
+#include "Library/HttpReferenceProvider.h"
 #include <cmath>
 
 namespace {
@@ -96,6 +98,8 @@ public:
 
         beginTest("Metadata repository saves atomically and reloads Unicode");
         auto testDirectory=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("ReferenceLabTests",{},false);testDirectory.createDirectory();referencelab::MetadataRepository repository(testDirectory.getChildFile("reference.json"));referencelab::ReferenceLibrary library;library.root=testDirectory;referencelab::ReferenceMetadata stored;stored.uuid="repository-test";stored.title=juce::String::fromUTF8("Traccia è");stored.source="track.wav";library.references.push_back(stored);juce::String repositoryError;expect(repository.save(library,repositoryError),repositoryError);auto loaded=repository.load(repositoryError);expectEquals((int)loaded.references.size(),1);if(!loaded.references.empty())expectEquals(loaded.references.front().title,stored.title);expect(repository.save(library,repositoryError),repositoryError);expect(testDirectory.getChildFile("reference.json.bak").existsAsFile());testDirectory.deleteRecursively();
+        beginTest("HTTP provider validates URLs");referencelab::HttpReferenceProvider http;juce::String urlError;expect(http.supportsUrl(juce::URL("https://example.com/reference.flac")));expect(!http.supportsUrl(juce::URL("ftp://example.com/reference.wav")));auto remote=http.inspectUrl(juce::URL("https://example.com/reference.wav"),urlError);expect(remote.has_value(),urlError);
+        beginTest("Playlist cycles and round trips JSON");referencelab::ReferencePlaylist playlist;playlist.name="Mastering";expect(playlist.add("a"));expect(playlist.add("b"));expectEquals(playlist.selectRelative(1),juce::String("b"));auto restored=referencelab::ReferencePlaylist::fromVar(playlist.toVar(),urlError);expect(restored.has_value(),urlError);if(restored)expectEquals(restored->referenceIds.size(),2);
     }
 };
 

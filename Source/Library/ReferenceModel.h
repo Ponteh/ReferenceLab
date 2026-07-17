@@ -39,4 +39,14 @@ struct ReferenceLibrary {
     std::vector<ReferenceMetadata> references;
 };
 
+struct ReferencePlaylist {
+    juce::String id { juce::Uuid().toString() }, name { "Nuova playlist" };
+    juce::StringArray referenceIds;
+    int currentIndex = -1;
+    bool add(const juce::String&); bool remove(const juce::String&);
+    juce::String current() const; juce::String selectRelative(int);
+    juce::var toVar() const;
+    static std::optional<ReferencePlaylist> fromVar(const juce::var&, juce::String& error);
+};
+
 } // namespace referencelab

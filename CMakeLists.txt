@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(ReferenceLab VERSION 1.0.0 LANGUAGES CXX)
+project(ReferenceLab VERSION 2.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +16,7 @@ juce_add_plugin(ReferenceLab
     COMPANY_NAME "ReferenceLab"
     BUNDLE_ID "it.referencelab.plugin"
     PLUGIN_MANUFACTURER_CODE RLab
+    # Preserve the v1 plug-in identity so DAW sessions upgrade in place.
     PLUGIN_CODE Rfl1
     PRODUCT_NAME "ReferenceLab"
     FORMATS VST3 Standalone
@@ -56,6 +57,8 @@ if (REFERENCELAB_BUILD_TESTS)
         Source/Library/MetadataRepository.cpp
         Source/Library/ReferenceManager.cpp
         Source/Library/LocalReferenceProvider.cpp
+        Source/Library/JsonCatalogProvider.cpp
+        Source/Library/HttpReferenceProvider.cpp
         Source/Audio/ComparisonProcessor.cpp
         Source/Audio/ReferencePlayer.cpp
         Source/Audio/AnalysisEngine.cpp

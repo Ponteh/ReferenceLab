@@ -53,4 +53,10 @@ std::optional<ReferenceMetadata> ReferenceMetadata::fromVar(const juce::var& v, 
 juce::File ReferenceMetadata::resolveAgainst(const juce::File& root) const {
     return juce::File::isAbsolutePath(source) ? juce::File(source) : root.getChildFile(source);
 }
+bool ReferencePlaylist::add(const juce::String& value) { if(value.isEmpty()||referenceIds.contains(value))return false;referenceIds.add(value);if(currentIndex<0)currentIndex=0;return true; }
+bool ReferencePlaylist::remove(const juce::String& value) { auto i=referenceIds.indexOf(value);if(i<0)return false;referenceIds.remove(i);currentIndex=referenceIds.isEmpty()?-1:juce::jlimit(0,referenceIds.size()-1,currentIndex);return true; }
+juce::String ReferencePlaylist::current() const { return juce::isPositiveAndBelow(currentIndex,referenceIds.size())?referenceIds[currentIndex]:juce::String{}; }
+juce::String ReferencePlaylist::selectRelative(int delta) { if(referenceIds.isEmpty()){currentIndex=-1;return{};}currentIndex=(currentIndex+delta)%referenceIds.size();if(currentIndex<0)currentIndex+=referenceIds.size();return current(); }
+juce::var ReferencePlaylist::toVar() const { auto*o=new juce::DynamicObject();o->setProperty("id",id);o->setProperty("name",name);o->setProperty("currentIndex",currentIndex);juce::Array<juce::var>ids;for(auto&v:referenceIds)ids.add(v);o->setProperty("references",ids);return o; }
+std::optional<ReferencePlaylist> ReferencePlaylist::fromVar(const juce::var&v,juce::String&error){auto*o=v.getDynamicObject();if(!o){error="Playlist non valida";return{};}ReferencePlaylist p;p.id=o->getProperty("id").toString();p.name=o->getProperty("name").toString();if(p.id.isEmpty()||p.name.isEmpty()){error="ID e nome playlist sono obbligatori";return{};}if(auto*a=o->getProperty("references").getArray())for(auto&x:*a)if(x.toString().isNotEmpty()&&!p.referenceIds.contains(x.toString()))p.referenceIds.add(x.toString());p.currentIndex=p.referenceIds.isEmpty()?-1:juce::jlimit(0,p.referenceIds.size()-1,(int)o->getProperty("currentIndex"));return p;}
 } // namespace referencelab
