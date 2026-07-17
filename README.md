@@ -26,7 +26,7 @@ Safe Export è attivo per impostazione predefinita. Alcuni host potrebbero non c
 
 ## Novita della versione 2
 
-La v2 introduce l'architettura per cataloghi JSON esterni, reference HTTP/HTTPS validate, playlist e cambio rapido multi-reference. Il provider Cambridge MT resta disabilitato finche non saranno completate verifica tecnica e autorizzazione legale.
+La v2 introduce cataloghi JSON esterni, reference HTTP/HTTPS validate, playlist e cambio rapido multi-reference. Audio e cataloghi remoti usano un downloader condiviso con timeout, redirect, retry controllato, cancellazione e limiti di memoria; l'audio web resta esclusivamente in RAM. Il provider Cambridge MT resta disabilitato finche non saranno completate verifica tecnica e autorizzazione legale.
 
 ## Stato
 
