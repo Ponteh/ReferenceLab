@@ -1,5 +1,6 @@
 #include "EqCurveDisplay.h"
 #include "FrequencyPlot.h"
+#include "UiTheme.h"
 
 namespace referencelab {
 EqCurveDisplay::EqCurveDisplay(SampleFifo& source, juce::AudioProcessorValueTreeState& parameters)
@@ -36,28 +37,30 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
                    (int)x - 14, (int)area.getBottom() - 13, 28, 12, juce::Justification::centred);
     }
 
-    auto audio = FrequencyPlot::spectrumPath(analyzer.getSpectrum(), analyzer.getFftSize(), sampleRate, area);
-    auto fill = audio;
-    fill.lineTo(area.getRight(), area.getBottom());
-    fill.lineTo(area.getX(), area.getBottom());
-    fill.closeSubPath();
-    g.setGradientFill(juce::ColourGradient(juce::Colour(0x7054c6eb), area.getX(), area.getY(),
-                                          juce::Colour(0x1054c6eb), area.getX(), area.getBottom(), false));
-    g.fillPath(fill);
-    g.setColour(juce::Colour(0xff54c6eb));
-    g.strokePath(audio, juce::PathStrokeType(1.3f));
+    if (audioAvailable) {
+        auto audio = FrequencyPlot::spectrumPath(analyzer.getSpectrum(), analyzer.getFftSize(), sampleRate, area);
+        auto fill = audio;
+        fill.lineTo(area.getRight(), area.getBottom());
+        fill.lineTo(area.getX(), area.getBottom());
+        fill.closeSubPath();
+        g.setGradientFill(juce::ColourGradient(audioColour.withAlpha(.44f), area.getX(), area.getY(),
+                                              audioColour.withAlpha(.06f), area.getX(), area.getBottom(), false));
+        g.fillPath(fill);
+        g.setColour(audioColour);
+        g.strokePath(audio, juce::PathStrokeType(1.3f));
+    }
 
     const auto bypassed = state.getRawParameterValue("eqBypass")->load() > 0.5f;
     if (!bypassed) {
         auto curve = FrequencyPlot::equalizerPath(state, sampleRate, area);
-        g.setColour(juce::Colour(0xff9be564));
+        g.setColour(UiTheme::equalizer());
         g.strokePath(curve, juce::PathStrokeType(2.0f));
     }
 
     auto legend = area.toNearestInt().removeFromTop(18);
-    g.setColour(juce::Colour(0xff54c6eb));
-    g.drawText("POST-EQ AUDIO", legend.removeFromLeft(105), juce::Justification::left);
-    g.setColour(bypassed ? juce::Colours::white.withAlpha(0.55f) : juce::Colour(0xff9be564));
+    g.setColour(audioColour);
+    g.drawText(audioAvailable ? "POST-EQ AUDIO" : "NESSUNA REFERENCE", legend.removeFromLeft(125), juce::Justification::left);
+    g.setColour(bypassed ? juce::Colours::white.withAlpha(0.55f) : UiTheme::equalizer());
     g.drawText(bypassed ? "EQ BYPASSED" : "EQ RESPONSE", legend, juce::Justification::right);
 }
 }

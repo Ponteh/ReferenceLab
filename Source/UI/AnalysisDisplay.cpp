@@ -1,5 +1,6 @@
 #include "AnalysisDisplay.h"
 #include "FrequencyPlot.h"
+#include "UiTheme.h"
 #include <algorithm>
 namespace referencelab {
 AnalysisDisplay::AnalysisDisplay(SampleFifo&m,SampleFifo&r,SampleFifo&o,juce::AudioProcessorValueTreeState&s):mixFifo(m),referenceFifo(r),outputFifo(o),state(s){setMouseCursor(juce::MouseCursor::CrosshairCursor);startTimerHz(30);}
@@ -15,10 +16,11 @@ void AnalysisDisplay::paint(juce::Graphics&g){
     auto spectrum=all.removeFromTop(all.getHeight()*.68f).reduced(8);g.setFont(10);
     for(auto db:{0,-18,-36,-54,-72,-90}){auto y=juce::jmap((float)db,-90.f,0.f,spectrum.getBottom(),spectrum.getY());g.setColour(juce::Colours::white.withAlpha(.08f));g.drawHorizontalLine((int)y,spectrum.getX(),spectrum.getRight());g.setColour(juce::Colours::white.withAlpha(.45f));g.drawText(juce::String(db)+" dB",(int)spectrum.getX()+2,(int)y-12,42,12,juce::Justification::left);}
     for(auto f:{20,50,100,200,500,1000,2000,5000,10000,20000}){auto x=FrequencyPlot::xForFrequency((float)f,spectrum);g.setColour(juce::Colours::white.withAlpha(.07f));g.drawVerticalLine((int)x,spectrum.getY(),spectrum.getBottom());g.setColour(juce::Colours::white.withAlpha(.45f));g.drawText(f>=1000?juce::String(f/1000)+"k":juce::String(f),(int)x-14,(int)spectrum.getBottom()-14,28,12,juce::Justification::centred);}
-    g.setColour(juce::Colour(0xff54c6eb));g.strokePath(FrequencyPlot::spectrumPath(mixAnalyzer.getSpectrum(),mixAnalyzer.getFftSize(),sampleRate,spectrum),juce::PathStrokeType(1.5f));
-    g.setColour(juce::Colour(0xffff9f43));g.strokePath(FrequencyPlot::spectrumPath(referenceAnalyzer.getSpectrum(),referenceAnalyzer.getFftSize(),sampleRate,spectrum),juce::PathStrokeType(1.5f));
-    g.setColour(juce::Colour(0xff9be564));g.strokePath(FrequencyPlot::equalizerPath(state,sampleRate,spectrum),juce::PathStrokeType(1.8f));
-    auto legend=spectrum.toNearestInt().removeFromTop(20);g.setColour(juce::Colour(0xff54c6eb));g.drawText("MIX",legend.removeFromLeft(35),juce::Justification::left);g.setColour(juce::Colour(0xffff9f43));g.drawText("REFERENCE",legend.removeFromLeft(72),juce::Justification::left);g.setColour(juce::Colour(0xff9be564));g.drawText("EQ",legend.removeFromLeft(30),juce::Justification::left);
-    auto scope=all.reduced(8);juce::Path wave;for(int x=0;x<(int)scope.getWidth();++x){auto index=juce::jlimit(0,maxSize-1,(int)(x/juce::jmax(1.f,scope.getWidth())*maxSize));auto y=scope.getCentreY()-outputTime[(size_t)index]*scope.getHeight()*.45f;if(x==0)wave.startNewSubPath(scope.getX(),y);else wave.lineTo(scope.getX()+x,y);}g.setColour(juce::Colour(0xff9be564));g.strokePath(wave,juce::PathStrokeType(1));g.setColour(juce::Colours::white.withAlpha(.65f));g.drawText("OUTPUT SCOPE",scope.toNearestInt().removeFromTop(20),juce::Justification::left);paintCursor(g);
+    auto mixColour=UiTheme::mix(state.state),referenceColour=UiTheme::reference(state.state),eqColour=UiTheme::equalizer();
+    g.setColour(mixColour);g.strokePath(FrequencyPlot::spectrumPath(mixAnalyzer.getSpectrum(),mixAnalyzer.getFftSize(),sampleRate,spectrum),juce::PathStrokeType(1.5f));
+    g.setColour(referenceColour);g.strokePath(FrequencyPlot::spectrumPath(referenceAnalyzer.getSpectrum(),referenceAnalyzer.getFftSize(),sampleRate,spectrum),juce::PathStrokeType(1.5f));
+    g.setColour(eqColour);g.strokePath(FrequencyPlot::equalizerPath(state,sampleRate,spectrum),juce::PathStrokeType(1.8f));
+    auto legend=spectrum.toNearestInt().removeFromTop(20);g.setColour(mixColour);g.drawText("MIX",legend.removeFromLeft(35),juce::Justification::left);g.setColour(referenceColour);g.drawText("REFERENCE",legend.removeFromLeft(72),juce::Justification::left);g.setColour(eqColour);g.drawText("EQ",legend.removeFromLeft(30),juce::Justification::left);
+    auto scope=all.reduced(8);juce::Path wave;for(int x=0;x<(int)scope.getWidth();++x){auto index=juce::jlimit(0,maxSize-1,(int)(x/juce::jmax(1.f,scope.getWidth())*maxSize));auto y=scope.getCentreY()-outputTime[(size_t)index]*scope.getHeight()*.45f;if(x==0)wave.startNewSubPath(scope.getX(),y);else wave.lineTo(scope.getX()+x,y);}g.setColour(eqColour);g.strokePath(wave,juce::PathStrokeType(1));g.setColour(juce::Colours::white.withAlpha(.65f));g.drawText("OUTPUT SCOPE",scope.toNearestInt().removeFromTop(20),juce::Justification::left);paintCursor(g);
 }
 }
