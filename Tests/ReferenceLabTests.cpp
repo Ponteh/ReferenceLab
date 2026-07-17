@@ -5,10 +5,12 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/SampleFifo.h"
+#include "Audio/SpectrumAnalyzer.h"
 #include "Audio/TransportController.h"
 #include "Library/JsonCatalogProvider.h"
 #include "Library/HttpReferenceProvider.h"
 #include "Library/ReferenceManager.h"
+#include <algorithm>
 #include <cmath>
 
 namespace {
@@ -94,9 +96,17 @@ public:
         beginTest("Comparison bypass remains transparent");
         referencelab::ComparisonProcessor transparent;transparent.prepare(48000.0,16);referencelab::ComparisonSettings transparentSettings;transparentSettings.bypass=true;transparent.update(transparentSettings);juce::AudioBuffer<float> transparentMix(2,16),transparentRef(2,16);for(int i=0;i<16;++i){transparentMix.setSample(0,i,(float)i/16.f);transparentMix.setSample(1,i,-(float)i/16.f);transparentRef.setSample(0,i,.25f);transparentRef.setSample(1,i,-.25f);}juce::AudioBuffer<float> expectedMix(transparentMix),expectedRef(transparentRef);transparent.process(transparentMix,transparentRef);for(int c=0;c<2;++c)for(int i=0;i<16;++i){expectWithinAbsoluteError(transparentMix.getSample(c,i),expectedMix.getSample(c,i),.000001f);expectWithinAbsoluteError(transparentRef.getSample(c,i),expectedRef.getSample(c,i),.000001f);}
 
+        beginTest("Band-pass favours its centre frequency");
+        auto bandPassLevel=[](double frequency){referencelab::ComparisonProcessor processor;processor.prepare(48000.0,48000);referencelab::ComparisonSettings settings;settings.bypass=false;settings.highPassEnabled=false;settings.lowPassEnabled=false;settings.bandPassEnabled=true;settings.bandPassHz=1000.f;settings.bandPassQ=4.f;processor.update(settings);juce::AudioBuffer<float> mix(2,48000),reference(2,48000);for(int i=0;i<48000;++i){auto sample=(float)std::sin(2.0*juce::MathConstants<double>::pi*frequency*i/48000.0);mix.setSample(0,i,sample);mix.setSample(1,i,sample);reference.setSample(0,i,sample);reference.setSample(1,i,sample);}processor.process(mix,reference);return mix.getRMSLevel(0,24000,24000);};
+        expect(bandPassLevel(1000.0)>bandPassLevel(100.0)*5.f);
+        referencelab::ComparisonSettings responseSettings;responseSettings.bypass=false;responseSettings.highPassEnabled=false;responseSettings.lowPassEnabled=false;responseSettings.bandPassEnabled=true;responseSettings.bandPassHz=1000.f;responseSettings.bandPassQ=4.f;expect(referencelab::ComparisonProcessor::responseDecibelsAt(responseSettings,1000.f,48000.0)>referencelab::ComparisonProcessor::responseDecibelsAt(responseSettings,100.f,48000.0)+20.f);
+
         beginTest("Lock-free sample FIFO preserves mono sum");
         referencelab::SampleFifo fifo;juce::AudioBuffer<float> fifoInput(2,2);fifoInput.setSample(0,0,1.f);fifoInput.setSample(1,0,-1.f);fifoInput.setSample(0,1,.5f);fifoInput.setSample(1,1,.5f);fifo.push(fifoInput);float fifoOutput[2]{};
         expectEquals(fifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],0.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],.5f,.0001f);
+
+        beginTest("Shared spectrum analyzer locates a sine wave");
+        referencelab::SampleFifo spectrumFifo;juce::AudioBuffer<float> spectrumInput(2,2048);for(int i=0;i<spectrumInput.getNumSamples();++i){auto sample=(float)std::sin(2.0*juce::MathConstants<double>::pi*1000.0*i/48000.0);spectrumInput.setSample(0,i,sample);spectrumInput.setSample(1,i,sample);}spectrumFifo.push(spectrumInput);referencelab::SpectrumAnalyzer spectrumAnalyzer(11);expect(spectrumAnalyzer.update(spectrumFifo));auto&bins=spectrumAnalyzer.getSpectrum();auto peak=(int)std::distance(bins.begin(),std::max_element(bins.begin()+1,bins.end()));expect(peak>=41&&peak<=44,"Expected the FFT peak near the 1 kHz bin");
 
         beginTest("Metadata repository saves atomically and reloads Unicode");
         auto testDirectory=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("ReferenceLabTests",{},false);testDirectory.createDirectory();referencelab::MetadataRepository repository(testDirectory.getChildFile("reference.json"));referencelab::ReferenceLibrary library;library.root=testDirectory;referencelab::ReferenceMetadata stored;stored.uuid="repository-test";stored.title=juce::String::fromUTF8("Traccia è");stored.source="track.wav";library.references.push_back(stored);juce::String repositoryError;expect(repository.save(library,repositoryError),repositoryError);auto loaded=repository.load(repositoryError);expectEquals((int)loaded.references.size(),1);if(!loaded.references.empty())expectEquals(loaded.references.front().title,stored.title);expect(repository.save(library,repositoryError),repositoryError);expect(testDirectory.getChildFile("reference.json.bak").existsAsFile());testDirectory.deleteRecursively();

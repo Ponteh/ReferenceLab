@@ -87,7 +87,7 @@ Il pannello dello spettro deve mostrare contemporaneamente:
 * lo spettro del Mix;
 * lo spettro della Reference;
 * la curva di risposta dell’EQ di confronto;
-* l’effetto complessivo dei filtri High Pass, Bell e Low Pass;
+* l’effetto complessivo dei filtri High Pass, Band Pass e Low Pass;
 * una griglia con valori numerici sugli assi;
 * una legenda delle sorgenti e degli elementi visualizzati.
 
@@ -482,7 +482,7 @@ Responsabilità:
 Responsabilità:
 
 - High Pass;
-- Bell;
+- Band Pass;
 - Low Pass;
 - Stereo;
 - Mono;
@@ -771,9 +771,9 @@ L'EQ di confronto deve essere applicato con gli stessi parametri a Mix e Referen
 
 Il sistema deve includere un filtro High Pass con frequenza, pendenza e bypass.
 
-### RF-036 – Bell
+### RF-036 – Band Pass
 
-Il sistema deve includere un filtro Bell con frequenza, gain, Q e bypass.
+Il sistema deve includere un filtro Band Pass con frequenza centrale, gain, Q e bypass.
 
 ### RF-037 – Low Pass
 
@@ -1288,7 +1288,7 @@ public:
 - **US-001:** Come fonico, voglio passare rapidamente dal mio mix alla reference per rilevare differenze di bilanciamento.
 - **US-002:** Come produttore, voglio confrontare Mix e Reference allo stesso loudness percepito.
 - **US-003:** Come utente, voglio isolare le basse per confrontare il low-end.
-- **US-004:** Come utente, voglio isolare una banda con un filtro Bell.
+- **US-004:** Come utente, voglio isolare una banda con un filtro Band Pass.
 - **US-005:** Come fonico, voglio ascoltare solo il Side.
 - **US-006:** Come fonico, voglio ascoltare in Mono.
 - **US-007:** Come utente, voglio mettere in loop il ritornello della reference.
@@ -1363,7 +1363,7 @@ public:
 | Track 2                  | Match: [Auto] Gain: -2.4 dB                          |
 +--------------------------+-----------------------------------------------------+
 | COMPARISON EQ                                                                  |
-| HPF: 80 Hz | Bell: 1.2 kHz / +0.0 dB / Q 1.0 | LPF: 12 kHz                  |
+| HPF: 80 Hz | Band Pass: 2.7 kHz / +0.0 dB / Q 1.0 | LPF: 12 kHz             |
 | Mode: [Stereo] [Mono] [Mid] [Side]                                             |
 +--------------------------------------------------------------------------------+
 | FFT OVERLAY                                                                    |
@@ -1515,7 +1515,7 @@ La versione 1 è considerata accettabile quando:
 - loop A/B;
 - A/B Mix/Reference;
 - loudness matching;
-- EQ High Pass, Bell, Low Pass;
+- EQ High Pass, Band Pass, Low Pass;
 - Stereo, Mono, Mid, Side;
 - FFT overlay;
 - oscilloscopio;

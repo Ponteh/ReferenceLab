@@ -62,6 +62,7 @@ if (REFERENCELAB_BUILD_TESTS)
         Source/Audio/ComparisonProcessor.cpp
         Source/Audio/ReferencePlayer.cpp
         Source/Audio/AnalysisEngine.cpp
+        Source/Audio/SpectrumAnalyzer.cpp
         Source/Audio/LoudnessMatcher.cpp)
     target_sources(ReferenceLabTests PRIVATE Source/Audio/TransportController.cpp)
     target_include_directories(ReferenceLabTests PRIVATE Source)

@@ -40,13 +40,13 @@ public:
     float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
     bool isTransportAvailable()const{return transportAvailable.load();}
     void resetMeters()noexcept{mixAnalysis.reset();referenceAnalysis.reset();outputAnalysis.reset();}
-    referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}
+    referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}referencelab::SampleFifo&getCompareFifo(){return compareFifo;}
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
     juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
     juce::AudioBuffer<float> referenceBuffer;std::atomic<bool>reference{false};float blendCurrent=0.f,blendTarget=0.f,blendStep=0.f;int blendRemaining=0;
-    referencelab::SampleFifo mixFifo,referenceFifo,outputFifo;
+    referencelab::SampleFifo mixFifo,referenceFifo,outputFifo,compareFifo;
     referencelab::TransportController transportController;
     mutable juce::CriticalSection activeSourceLock;juce::String activeSource;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
     std::shared_ptr<int> lifetimeToken{std::make_shared<int>(0)};juce::ThreadPool remoteDownloadPool{1};std::atomic<RemoteLoadState>remoteLoadState{RemoteLoadState::idle};std::atomic<float>remoteLoadProgress{0};std::atomic<std::uint64_t>remoteLoadGeneration{0},catalogImportGeneration{0};
