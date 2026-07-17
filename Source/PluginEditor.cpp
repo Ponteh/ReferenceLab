@@ -1,5 +1,5 @@
 #include "PluginEditor.h"
-ReferenceLabEditor::ReferenceLabEditor(ReferenceLabAudioProcessor&x):AudioProcessorEditor(x),p(x),analysisDisplay(x.getMixFifo(),x.getReferenceFifo(),x.getOutputFifo()),waveform(x.getPlayer()){
+ReferenceLabEditor::ReferenceLabEditor(ReferenceLabAudioProcessor&x):AudioProcessorEditor(x),p(x),analysisDisplay(x.getMixFifo(),x.getReferenceFifo(),x.getOutputFifo(),x.state),waveform(x.getPlayer()){
     setResizable(true,true);setWantsKeyboardFocus(true);setResizeLimits(900,650,1800,1200);setSize(1100,780);
     addAndMakeVisible(add);
     addAndMakeVisible(scan);
@@ -38,6 +38,7 @@ ReferenceLabEditor::ReferenceLabEditor(ReferenceLabAudioProcessor&x):AudioProces
     addAndMakeVisible(editTags);
     addAndMakeVisible(list);
     addAndMakeVisible(analysisDisplay);
+    analysisDisplay.setSampleRate(p.getSampleRate());
     addAndMakeVisible(waveform);waveform.onSeek=[this](double value){seek.setValue(value,juce::dontSendNotification);};waveform.onLoopChanged=[this](double a,double b){loopStart.setValue(a,juce::dontSendNotification);loopEnd.setValue(b,juce::dontSendNotification);applyLoop();persistPlayback();};
     title.setText("ReferenceLab 2.0",juce::dontSendNotification);search.setTextToShowWhenEmpty("Cerca titolo, artista, album, genere, tag...",juce::Colours::grey);
     editTitle.setTextToShowWhenEmpty("Titolo",juce::Colours::grey);editArtist.setTextToShowWhenEmpty("Artista",juce::Colours::grey);editAlbum.setTextToShowWhenEmpty("Album",juce::Colours::grey);editGenre.setTextToShowWhenEmpty("Genere",juce::Colours::grey);editYear.setTextToShowWhenEmpty("Anno",juce::Colours::grey);editBpm.setTextToShowWhenEmpty("BPM",juce::Colours::grey);editKey.setTextToShowWhenEmpty("Tonalità",juce::Colours::grey);editRating.setTextToShowWhenEmpty("Rating 0-5",juce::Colours::grey);editTags.setTextToShowWhenEmpty("Tag separati da virgola",juce::Colours::grey);editNotes.setTextToShowWhenEmpty("Note",juce::Colours::grey);filterArtist.setTextToShowWhenEmpty("Filtro artista",juce::Colours::grey);filterGenre.setTextToShowWhenEmpty("Filtro genere",juce::Colours::grey);filterKey.setTextToShowWhenEmpty("Tonalità",juce::Colours::grey);minBpm.setTextToShowWhenEmpty("BPM min",juce::Colours::grey);maxBpm.setTextToShowWhenEmpty("BPM max",juce::Colours::grey);recursiveScan.setToggleState(true,juce::dontSendNotification);
