@@ -23,6 +23,7 @@ public:
     bool addFile(const juce::File&,juce::String& error);
     int scanFolder(const juce::File&,bool recursive,juce::String& warning);
     int importCatalog(const juce::File&,juce::String& warning);
+    int importRemoteCatalog(const juce::String&json,const juce::URL&catalogUrl,juce::String&warning);
     bool addUrl(const juce::String&,juce::String& error);
     bool createPlaylist(const juce::String& name,juce::String& error);
     bool addToPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
