@@ -106,6 +106,10 @@ L’asse orizzontale deve rappresentare la frequenza in Hz, preferibilmente con 
 
 L’asse verticale deve mostrare il livello in dB e, quando l’EQ è visualizzato, il relativo guadagno o attenuazione.
 
+Il pannello Analysis deve includere un controllo rotativo **Slope** per compensare visivamente l'inclinazione degli spettri FFT. Il controllo deve avere un intervallo inclusivo da **0,0 a 4,5 dB/ottava**, un valore predefinito di **4,5 dB/ottava** e una risoluzione massima di **0,1 dB/ottava**. Il valore corrente deve essere sempre leggibile accanto al pomello.
+
+La compensazione Slope deve essere applicata in modo identico agli spettri Mix, Reference e agli eventuali spettri medi o congelati. La modifica deve aggiornare immediatamente i grafici, anche durante il Freeze, senza modificare il segnale audio, i dati FFT originali o la curva di risposta dell'EQ.
+
 La curva dell’EQ deve aggiornarsi dinamicamente durante la modifica dei parametri e deve permettere di comprendere immediatamente quali frequenze vengono isolate, attenuate o enfatizzate.
 
 La legenda deve indicare chiaramente almeno:
@@ -338,6 +342,7 @@ In particolare:
 - Mono;
 - Mid;
 - Side;
+- Swap Left/Right;
 - eventuali filtri di ascolto.
 
 La finalità è evitare che il confronto venga alterato da processing differenti.
@@ -813,6 +818,12 @@ La modalità selezionata deve essere applicata in modo identico a Mix e Referenc
 
 Il cambio di modalità deve utilizzare smoothing o crossfade.
 
+### RF-045A – Swap Left/Right
+
+Il pannello Analysis deve includere un pulsante **Swap L/R** che, quando attivo, invia il canale destro all'uscita sinistra e il canale sinistro all'uscita destra.
+
+Lo scambio deve essere applicato in modo identico a Mix e Reference, senza modificare i file sorgente. L'attivazione e la disattivazione devono avvenire senza click udibili, lo stato attivo deve essere chiaramente visibile e il valore deve essere salvato e ripristinato nello stato del plugin.
+
 ## 7.8 Analisi
 
 ### RF-046 – Analisi separata
@@ -830,6 +841,12 @@ Il plugin deve sovrapporre gli spettri di Mix e Reference.
 ### RF-049 – Configurazione FFT
 
 L'utente deve poter configurare dimensione FFT, smoothing, averaging e velocità di aggiornamento.
+
+### RF-049A – Slope degli spettri
+
+Il pannello Analysis deve fornire un pomello Slope configurabile da 0,0 a 4,5 dB/ottava, con valore predefinito 4,5 dB/ottava e risoluzione massima 0,1 dB/ottava.
+
+Lo Slope deve essere una compensazione esclusivamente grafica, applicata uniformemente a tutti gli spettri FFT visualizzati. Il controllo deve rimanere operativo in modalità Freeze, deve mostrare il valore numerico corrente e deve essere salvato e ripristinato nello stato del plugin.
 
 ### RF-050 – Oscilloscopio
 
@@ -1023,7 +1040,7 @@ Se l'host non comunica correttamente lo stato offline, il plugin deve mostrare u
 
 ### RF-095 – Salvataggio stato DAW
 
-Il plugin deve salvare reference attiva, posizione, loop, modalità A/B, EQ, modalità di ascolto, loudness matching, analisi e sync.
+Il plugin deve salvare reference attiva, posizione, loop, modalità A/B, EQ, modalità di ascolto, Swap L/R, loudness matching, analisi e sync.
 
 ### RF-096 – Percorsi file
 
@@ -1364,9 +1381,9 @@ public:
 +--------------------------+-----------------------------------------------------+
 | COMPARISON EQ                                                                  |
 | HPF: 80 Hz | Band Pass: 2.7 kHz / +0.0 dB / Q 1.0 | LPF: 12 kHz             |
-| Mode: [Stereo] [Mono] [Mid] [Side]                                             |
+| Mode: [Stereo] [Mono] [Mid] [Side]                         [Swap L/R]          |
 +--------------------------------------------------------------------------------+
-| FFT OVERLAY                                                                    |
+| FFT OVERLAY                                      Slope: [ 4.5 dB/oct ]         |
 +--------------------------------------------------------------------------------+
 | MIX              | REFERENCE         | OUTPUT                                  |
 | LUFS / Peak / RMS | LUFS / Peak / RMS | Correlation / Width / Oscilloscope     |
@@ -1543,7 +1560,9 @@ La versione 1 è considerata accettabile quando:
 - cache persistente opzionale;
 - gestione errori di rete;
 - validazione URL;
-- UI per selezionare sorgente e catalogo.
+- UI per selezionare sorgente e catalogo;
+- pomello Slope 0,0–4,5 dB/ottava nel pannello Analysis;
+- pulsante Swap L/R nel pannello Analysis.
 
 ---
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_audio_utils/juce_audio_utils.h>
+#include <foleys_gui_magic/foleys_gui_magic.h>
 #include <cstdint>
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/CacheManager.h"
@@ -39,15 +40,17 @@ public:
     referencelab::MeterSnapshot getOutputMeters()const{return outputAnalysis.snapshot();}
     float getMatchedGainDb()const{return matcher.getAppliedGainDb();}
     bool isTransportAvailable()const{return transportAvailable.load();}
+    bool isHostPlaying()const noexcept{return hostPlaying.load();}double getHostPositionSeconds()const noexcept{return hostPositionSeconds.load();}double getHostBpm()const noexcept{return hostBpm.load();}int getHostTimeSignatureNumerator()const noexcept{return hostTimeSignatureNumerator.load();}int getHostTimeSignatureDenominator()const noexcept{return hostTimeSignatureDenominator.load();}
+    foleys::MagicProcessorState&getGuiState()noexcept{return guiState;}
     void resetMeters()noexcept{mixAnalysis.reset();referenceAnalysis.reset();outputAnalysis.reset();}
     referencelab::SampleFifo&getMixFifo(){return mixFifo;}referencelab::SampleFifo&getReferenceFifo(){return referenceFifo;}referencelab::SampleFifo&getOutputFifo(){return outputFifo;}referencelab::SampleFifo&getCompareFifo(){return compareFifo;}
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
+    foleys::MagicProcessorState guiState{*this};juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;
     juce::AudioBuffer<float> referenceBuffer;std::atomic<bool>reference{false};float blendCurrent=0.f,blendTarget=0.f,blendStep=0.f;int blendRemaining=0;
     referencelab::SampleFifo mixFifo,referenceFifo,outputFifo,compareFifo;
-    referencelab::TransportController transportController;
+    referencelab::TransportController transportController;std::atomic<bool>hostPlaying{false};std::atomic<double>hostPositionSeconds{-1.0},hostBpm{0.0};std::atomic<int>hostTimeSignatureNumerator{0},hostTimeSignatureDenominator{0};
     mutable juce::CriticalSection activeSourceLock;juce::String activeSource;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
     std::shared_ptr<int> lifetimeToken{std::make_shared<int>(0)};juce::ThreadPool remoteDownloadPool{1};std::atomic<RemoteLoadState>remoteLoadState{RemoteLoadState::idle};std::atomic<float>remoteLoadProgress{0};std::atomic<std::uint64_t>remoteLoadGeneration{0},catalogImportGeneration{0};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
