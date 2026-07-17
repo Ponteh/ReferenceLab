@@ -1,5 +1,7 @@
 #pragma once
 #include "LocalReferenceProvider.h"
+#include "JsonCatalogProvider.h"
+#include "HttpReferenceProvider.h"
 #include "MetadataRepository.h"
 #include <mutex>
 
@@ -19,6 +21,13 @@ public:
     void load(); bool save(juce::String& error);
     bool addFile(const juce::File&,juce::String& error);
     int scanFolder(const juce::File&,bool recursive,juce::String& warning);
+    int importCatalog(const juce::File&,juce::String& warning);
+    bool addUrl(const juce::String&,juce::String& error);
+    bool createPlaylist(const juce::String& name,juce::String& error);
+    bool addToPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
+    bool removeFromPlaylist(const juce::String& playlistId,const juce::String& referenceId,juce::String& error);
+    std::optional<ReferenceMetadata> selectPlaylistRelative(const juce::String& playlistId,int delta,juce::String& error);
+    std::vector<ReferencePlaylist> playlistsSnapshot() const;
     bool remove(const juce::String& uuid,juce::String& error);
     bool updateMetadata(const ReferenceMetadata&,juce::String& error);
     bool relink(const juce::String&uuid,const juce::File&,juce::String&error);
@@ -27,7 +36,8 @@ public:
     ReferenceLibrary snapshot() const;
     juce::String getLastWarning() const;
 private:
-    mutable std::mutex mutex; MetadataRepository repository; LocalReferenceProvider local; ReferenceLibrary library; juce::String lastWarning;
+    mutable std::mutex mutex; MetadataRepository repository; juce::File playlistsFile; LocalReferenceProvider local; JsonCatalogProvider catalog; HttpReferenceProvider http; ReferenceLibrary library; std::vector<ReferencePlaylist> playlists; juce::String lastWarning;
+    bool savePlaylists(const std::vector<ReferencePlaylist>&,juce::String& error) const;
     static bool matches(const ReferenceMetadata&,const juce::String&);
 };
 }

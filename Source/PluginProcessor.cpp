@@ -1,6 +1,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 #include <cmath>
+#include <limits>
 
 juce::AudioProcessorValueTreeState::ParameterLayout ReferenceLabAudioProcessor::createLayout(){
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> p;
@@ -31,7 +32,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout ReferenceLabAudioProcessor::
     return {p.begin(),p.end()};
 }
 ReferenceLabAudioProcessor::ReferenceLabAudioProcessor():AudioProcessor(BusesProperties().withInput("Input",juce::AudioChannelSet::stereo(),true).withOutput("Output",juce::AudioChannelSet::stereo(),true)),state(*this,nullptr,"STATE",createLayout()),manager(juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("ReferenceLab").getChildFile("reference.json")){formats.registerBasicFormats();manager.load();}
-ReferenceLabAudioProcessor::~ReferenceLabAudioProcessor()=default;
+ReferenceLabAudioProcessor::~ReferenceLabAudioProcessor(){lifetimeToken.reset();remoteDownloadPool.removeAllJobs(true,10000);}
 void ReferenceLabAudioProcessor::prepareToPlay(double sr,int n){player.prepare(sr);comparison.prepare(sr,n);mixAnalysis.prepare(sr);referenceAnalysis.prepare(sr);outputAnalysis.prepare(sr);matcher.prepare(sr);referenceBuffer.setSize(2,n);blendCurrent=blendTarget=reference.load()?1.f:0.f;blendStep=0.f;blendRemaining=0;}
 bool ReferenceLabAudioProcessor::isBusesLayoutSupported(const BusesLayout&l)const{return l.getMainInputChannelSet()==juce::AudioChannelSet::stereo()&&l.getMainOutputChannelSet()==juce::AudioChannelSet::stereo();}
 void ReferenceLabAudioProcessor::processBlock(juce::AudioBuffer<float>&mix,juce::MidiBuffer&){
@@ -44,6 +45,22 @@ void ReferenceLabAudioProcessor::processBlock(juce::AudioBuffer<float>&mix,juce:
 }
 bool ReferenceLabAudioProcessor::loadFile(const juce::File&f,juce::String&e){auto ok=player.load(f,formats,e);if(ok){juce::String catalogError;manager.addFile(f,catalogError);player.play();}return ok;}
 void ReferenceLabAudioProcessor::loadFileAsync(const juce::File&f,std::function<void(const juce::String&)>done){if(!f.existsAsFile()){if(done)done("File non trovato");return;}auto library=manager.snapshot();for(auto&m:library.references)if(m.resolveAgainst(library.root)==f){player.setStartOffset(m.startOffsetSeconds);player.setLoop(m.loop.enabled,m.loop.startSeconds,m.loop.endSeconds,m.loop.crossfadeMs);break;}cache.loadAsync(f,[this,f,done=std::move(done)](std::shared_ptr<referencelab::ReferenceAudioData>data,const juce::String&error,bool){if(data){player.setAudio(std::move(data));if(auto restore=pendingRestorePosition.exchange(-1.0);restore>=0.0)player.seek(restore);player.play();{const juce::ScopedLock lock(activeFileLock);activeFile=f;}juce::String catalogError;manager.addFile(f,catalogError);}if(done)done(error);});}
+void ReferenceLabAudioProcessor::loadUrlAsync(const juce::URL&url,std::function<void(const juce::String&)>done){
+    const auto source=url.toString(false);referencelab::HttpReferenceProvider provider;if(!provider.supportsUrl(url)){if(done)done("URL audio non valido");return;}
+    std::weak_ptr<int> lifetime=lifetimeToken;remoteDownloadPool.addJob([this,lifetime,url,done=std::move(done)]()mutable{
+        int status=0;juce::StringPairArray responseHeaders;auto options=juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withConnectionTimeoutMs(20000).withNumRedirectsToFollow(5).withStatusCode(&status).withResponseHeaders(&responseHeaders);auto input=url.createInputStream(options);
+        juce::String error;std::shared_ptr<referencelab::ReferenceAudioData>data;
+        if(!input)error=status>0?"Download HTTP fallito ("+juce::String(status)+")":"Impossibile connettersi alla reference remota";
+        else if(status<200||status>=300){auto cloudflare=responseHeaders.getValue("cf-mitigated",{}).equalsIgnoreCase("challenge");error=cloudflare?"Accesso bloccato dalla verifica Cloudflare del sito (HTTP "+juce::String(status)+"). Questo URL non e una sorgente audio diretta.":"Download HTTP fallito ("+juce::String(status)+")";}
+        else{juce::MemoryOutputStream downloaded;const auto bytes=downloaded.writeFromInputStream(*input,-1);if(bytes<=0)error="La reference remota e vuota";
+            juce::AudioFormatManager remoteFormats;remoteFormats.registerBasicFormats();std::unique_ptr<juce::AudioFormatReader>reader;if(error.isEmpty()){auto memoryInput=std::make_unique<juce::MemoryInputStream>(downloaded.getData(),downloaded.getDataSize(),true);reader.reset(remoteFormats.createReaderFor(std::move(memoryInput)));}
+            if(!reader&&error.isEmpty())error="Formato audio remoto non supportato o risposta web non valida";
+            else if(reader->lengthInSamples<=0||reader->lengthInSamples>std::numeric_limits<int>::max())error="Durata della reference remota non supportata";
+            else{data=std::make_shared<referencelab::ReferenceAudioData>();data->sampleRate=reader->sampleRate;data->samples.setSize(2,(int)reader->lengthInSamples);if(!reader->read(&data->samples,0,data->samples.getNumSamples(),0,true,true)){data.reset();error="Errore durante la decodifica della reference remota";}else if(reader->numChannels==1)data->samples.copyFrom(1,0,data->samples,0,0,data->samples.getNumSamples());}
+        }
+        juce::MessageManager::callAsync([this,lifetime,data=std::move(data),error,done=std::move(done)]()mutable{if(lifetime.expired())return;if(data){player.setAudio(std::move(data));player.play();const juce::ScopedLock lock(activeFileLock);activeFile=juce::File{};}if(done)done(error);});
+    });
+}
 bool ReferenceLabAudioProcessor::saveComparisonPreset(const juce::File&file,juce::String&error){file.getParentDirectory().createDirectory();auto tree=state.copyState();for(auto property:{juce::Identifier("reference"),juce::Identifier("referencePosition"),juce::Identifier("activeReferencePath")})tree.removeProperty(property,nullptr);auto xml=tree.createXml();if(!xml||!file.replaceWithText(xml->toString())){error="Impossibile salvare il preset";return false;}return true;}
 bool ReferenceLabAudioProcessor::loadComparisonPreset(const juce::File&file,juce::String&error){auto xml=juce::XmlDocument::parse(file);if(!xml){error="Preset non valido";return false;}auto tree=juce::ValueTree::fromXml(*xml);if(!tree.isValid()||tree.getType()!=state.state.getType()){error="Formato preset non compatibile";return false;}for(auto property:{juce::Identifier("reference"),juce::Identifier("referencePosition"),juce::Identifier("activeReferencePath")})tree.removeProperty(property,nullptr);state.replaceState(tree);return true;}
 void ReferenceLabAudioProcessor::getStateInformation(juce::MemoryBlock&m){auto v=state.copyState();v.setProperty("reference",reference.load(),nullptr);v.setProperty("referencePosition",player.getPositionSeconds(),nullptr);{const juce::ScopedLock lock(activeFileLock);v.setProperty("activeReferencePath",activeFile.getFullPathName(),nullptr);}if(auto xml=v.createXml())copyXmlToBinary(*xml,m);}
