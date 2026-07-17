@@ -7,7 +7,7 @@
 
 namespace referencelab {
 struct LibraryDescriptor { juce::String id,name; juce::File database; };
-enum class ReferenceSort { title, artist, genre, bpm, rating, dateAdded, lastUsed };
+enum class ReferenceSort { title, artist, album, genre, year, bpm, rating, dateAdded, lastUsed };
 struct ReferenceFilter {
     juce::String query;
     bool favouritesOnly = false;

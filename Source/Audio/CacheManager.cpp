@@ -2,7 +2,7 @@
 #include <algorithm>
 
 namespace referencelab {
-CacheManager::CacheManager(std::size_t bytes):maximum(bytes){}
+CacheManager::CacheManager(std::size_t bytes):maximum(juce::jmax<std::size_t>(16u*1024u*1024u,bytes)){}
 CacheManager::~CacheManager(){pool.removeAllJobs(true,10000);cancelPendingUpdate();std::scoped_lock lock(mutex);completions.clear();}
 std::string CacheManager::key(const juce::File&f){return f.getFullPathName().toLowerCase().toStdString();}
 std::shared_ptr<ReferenceAudioData> CacheManager::decode(const juce::File&f,juce::String&error){juce::AudioFormatManager formats;formats.registerBasicFormats();std::unique_ptr<juce::AudioFormatReader>reader(formats.createReaderFor(f));if(!reader){error="Formato audio non supportato o file non valido";return{};}if(reader->lengthInSamples<=0||reader->lengthInSamples>std::numeric_limits<int>::max()){error="Durata file non supportata";return{};}auto data=std::make_shared<ReferenceAudioData>();data->sampleRate=reader->sampleRate;data->samples.setSize(2,(int)reader->lengthInSamples);if(!reader->read(&data->samples,0,data->samples.getNumSamples(),0,true,true)){error="Errore durante la decodifica";return{};}if(reader->numChannels==1)data->samples.copyFrom(1,0,data->samples,0,0,data->samples.getNumSamples());return data;}
