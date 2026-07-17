@@ -25,6 +25,7 @@ public:
     bool isPlaying() const noexcept { return playing.load(); }
     double getPositionSeconds() const noexcept;
     double getDurationSeconds() const noexcept;
+    std::shared_ptr<const ReferenceAudioData> getAudioSnapshot() const noexcept { return audio.load(std::memory_order_acquire); }
 private:
     std::atomic<std::shared_ptr<ReferenceAudioData>> audio;
     std::atomic<bool> playing { false }, loopEnabled { false };
