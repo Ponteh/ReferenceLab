@@ -2,212 +2,57 @@
 
 namespace referencelab {
 namespace {
-juce::ValueTree findById(const juce::ValueTree&node,const juce::String&id)
-{
-    if(node.getProperty("id").toString()==id)return node;
-    for(auto child:node)
-        if(auto result=findById(child,id);result.isValid())return result;
-    return{};
+juce::ValueTree findById(const juce::ValueTree&node,const juce::String&id){if(node.getProperty("id").toString()==id)return node;for(auto child:node)if(auto result=findById(child,id);result.isValid())return result;return{};}
 }
-}
+void setGuiMagicLibraryRatio(juce::ValueTree&tree,double value){const auto ratio=juce::jlimit(.25,.55,value);if(auto node=findById(tree,"libraryPane");node.isValid())node.setProperty("flex-grow",ratio*100.0,nullptr);if(auto node=findById(tree,"contentPane");node.isValid())node.setProperty("flex-grow",(1.0-ratio)*100.0,nullptr);}
+void setGuiMagicDrawers(juce::ValueTree&tree,bool libraryOpen,bool settingsOpen,double ratio){setGuiMagicLibraryRatio(tree,ratio);if(auto node=findById(tree,"libraryPane");node.isValid()){node.setProperty("min-width",libraryOpen?290:0,nullptr);node.setProperty("max-width",libraryOpen?520:0,nullptr);node.setProperty("flex-grow",libraryOpen?juce::jlimit(.25,.55,ratio)*100.0:0.0,nullptr);}if(auto node=findById(tree,"mainSplitter");node.isValid()){node.setProperty("min-width",libraryOpen?10:0,nullptr);node.setProperty("max-width",libraryOpen?10:0,nullptr);}if(auto node=findById(tree,"settingsPane");node.isValid()){node.setProperty("min-width",settingsOpen?300:0,nullptr);node.setProperty("max-width",settingsOpen?390:0,nullptr);node.setProperty("flex-grow",settingsOpen?28:0,nullptr);}}
 
-void setGuiMagicLibraryRatio(juce::ValueTree&tree,double libraryWidthRatio)
-{
-    const auto ratio=juce::jlimit(.25,.55,libraryWidthRatio);
-    if(auto library=findById(tree,"libraryPane");library.isValid())
-        library.setProperty("flex-grow",ratio*100.0,nullptr);
-    if(auto content=findById(tree,"contentPane");content.isValid())
-        content.setProperty("flex-grow",(1.0-ratio)*100.0,nullptr);
-}
-
-juce::ValueTree createGuiMagicTheme(double libraryWidthRatio)
-{
-    static constexpr auto layout=R"xml(
+juce::ValueTree createGuiMagicTheme(double ratio){static constexpr auto layout=R"xml(
 <magic>
-  <Styles>
-    <Style name="default">
-      <Nodes/>
-      <Classes>
-        <header background-color="ff18212c" border="1" border-color="ff344455" radius="8" padding="5"/>
-        <workspace background-color="ff10151d" margin="8 0 0 0" padding="0"/>
-        <panel background-color="ff202b38" border="1" border-color="ff344455" radius="8" padding="10"/>
-        <page background-color="ff202b38" flex-direction="column" padding="12"/>
-        <row flex-direction="row" flex-grow="0" flex-shrink="0" min-height="38" max-height="42"/>
-        <fill flex-grow="1" flex-shrink="1"/>
-        <fixed flex-grow="0" flex-shrink="0"/>
-      </Classes>
-      <Types>
-        <View margin="0" padding="0"/>
-        <ReferenceLabComponent margin="3" padding="0" border="0"/>
-      </Types>
-      <Palettes><default/></Palettes>
-    </Style>
-  </Styles>
-  <View id="root" flex-direction="column" background-color="ff10151d" margin="16" padding="0">
-    <View id="header" class="header" flex-direction="row" flex-grow="0" flex-shrink="0" min-height="48" max-height="48">
-      <ReferenceLabComponent id="title" class="fill" min-width="170"/>
-      <ReferenceLabComponent id="librarySelector" class="fixed" min-width="170" max-width="170"/>
-      <ReferenceLabComponent id="newLibrary" class="fixed" min-width="105" max-width="105"/>
-      <ReferenceLabComponent id="transportStatus" class="fixed" min-width="175" max-width="175"/>
-      <ReferenceLabComponent id="mix" class="fixed" min-width="75" max-width="75"/>
-      <ReferenceLabComponent id="ref" class="fixed" min-width="105" max-width="105"/>
-    </View>
-    <View id="workspace" class="workspace" flex-direction="row" flex-grow="1">
-      <View id="libraryPane" class="panel" flex-direction="column" min-width="290" max-width="520" flex-grow="34">
-        <View class="row">
-          <ReferenceLabComponent id="add" class="fill"/>
-          <ReferenceLabComponent id="scan" class="fill"/>
-        </View>
-        <View class="row">
-          <ReferenceLabComponent id="importCatalog" class="fill"/>
-          <ReferenceLabComponent id="addUrl" class="fill"/>
-        </View>
-        <View class="row">
-          <ReferenceLabComponent id="remove" class="fixed" min-width="72" max-width="72"/>
-          <ReferenceLabComponent id="relink" class="fixed" min-width="78" max-width="78"/>
-          <ReferenceLabComponent id="recursiveScan" class="fill"/>
-        </View>
-        <View class="row">
-          <ReferenceLabComponent id="search" flex-grow="2"/>
-          <ReferenceLabComponent id="favouritesOnly" flex-grow="1"/>
-        </View>
-        <View class="row">
-          <ReferenceLabComponent id="sort" class="fixed" min-width="105" max-width="105"/>
-          <ReferenceLabComponent id="sortDescending" class="fixed" min-width="68" max-width="68"/>
-          <ReferenceLabComponent id="playlist" class="fill"/>
-        </View>
-        <View class="row">
-          <ReferenceLabComponent id="newPlaylist" class="fixed" min-width="62" max-width="62"/>
-          <ReferenceLabComponent id="addToPlaylist" class="fixed" min-width="86" max-width="86"/>
-          <View class="fill"/>
-          <ReferenceLabComponent id="previousReference" class="fixed" min-width="34" max-width="34"/>
-          <ReferenceLabComponent id="nextReference" class="fixed" min-width="34" max-width="34"/>
-        </View>
-        <ReferenceLabComponent id="list" class="fill" min-height="160"/>
-      </View>
-      <ReferenceLabComponent id="mainSplitter" class="fixed" min-width="10" max-width="10" margin="0"/>
-      <View id="contentPane" class="panel" display="tabbed" tab-height="34" selected-tab="uiTab" min-width="430" flex-grow="66">
-        <View id="referencePage" class="page" tab-caption="Reference">
-          <ReferenceLabComponent id="waveform" class="fill" min-height="190"/>
-          <View class="row">
-            <ReferenceLabComponent id="play" class="fixed" min-width="68" max-width="68"/>
-            <ReferenceLabComponent id="pause" class="fixed" min-width="72" max-width="72"/>
-            <ReferenceLabComponent id="stop" class="fixed" min-width="68" max-width="68"/>
-            <ReferenceLabComponent id="seek" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="startOffset" flex-grow="2"/>
-            <ReferenceLabComponent id="loopEnabled" class="fixed" min-width="70" max-width="70"/>
-            <ReferenceLabComponent id="loopStart" flex-grow="2"/>
-            <ReferenceLabComponent id="loopEnd" flex-grow="2"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="transportSync" class="fixed" min-width="82" max-width="82"/>
-            <ReferenceLabComponent id="syncMode" class="fixed" min-width="125" max-width="125"/>
-            <ReferenceLabComponent id="syncOffset" class="fixed" min-width="145" max-width="145"/>
-            <ReferenceLabComponent id="fullLoop" class="fill"/>
-            <ReferenceLabComponent id="resetWaveformView" class="fill"/>
-          </View>
-          <ReferenceLabComponent id="hostTempoStatus" class="fixed" min-height="24" max-height="24"/>
-        </View>
-        <View id="analysisPage" class="page" tab-caption="Analysis">
-          <View class="row">
-            <ReferenceLabComponent id="fftSize" class="fixed" min-width="95" max-width="95"/>
-            <ReferenceLabComponent id="fftSmoothing" class="fixed" min-width="160" max-width="160"/>
-            <ReferenceLabComponent id="displayRate" class="fixed" min-width="90" max-width="90"/>
-            <ReferenceLabComponent id="freezeDisplay" class="fixed" min-width="70" max-width="70"/>
-            <ReferenceLabComponent id="resetMeters" class="fill"/>
-          </View>
-          <ReferenceLabComponent id="analysisDisplay" class="fill" min-height="180"/>
-          <ReferenceLabComponent id="analysisMeters" class="fixed" min-height="118" max-height="118"/>
-        </View>
-        <View id="comparePage" class="page" tab-caption="Compare">
-          <ReferenceLabComponent id="eqCurve" class="fill" min-height="150"/>
-          <View class="row">
-            <ReferenceLabComponent id="matchBypass" class="fixed" min-width="125" max-width="125"/>
-            <ReferenceLabComponent id="autoMatch" class="fixed" min-width="110" max-width="110"/>
-            <ReferenceLabComponent id="matchMode" class="fixed" min-width="150" max-width="150"/>
-            <View class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="manualGain" flex-grow="2"/>
-            <ReferenceLabComponent id="matchedGain" flex-grow="1"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="eqBypass" class="fixed" min-width="115" max-width="115"/>
-            <ReferenceLabComponent id="listeningMode" class="fixed" min-width="135" max-width="135"/>
-            <ReferenceLabComponent id="fade" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="hpfEnabled" class="fixed" min-width="70" max-width="70"/>
-            <ReferenceLabComponent id="hpf" flex-grow="2"/>
-            <ReferenceLabComponent id="hpfSlope" flex-grow="1"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="bellEnabled" class="fixed" min-width="92" max-width="92"/>
-            <ReferenceLabComponent id="bellFreq" class="fill"/>
-            <ReferenceLabComponent id="bellGain" class="fill"/>
-            <ReferenceLabComponent id="bellQ" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="lpfEnabled" class="fixed" min-width="70" max-width="70"/>
-            <ReferenceLabComponent id="lpf" flex-grow="2"/>
-            <ReferenceLabComponent id="lpfSlope" flex-grow="1"/>
-          </View>
-        </View>
-        <View id="detailsPage" class="page" tab-caption="Details">
-          <View class="row">
-            <ReferenceLabComponent id="filterArtist" class="fill"/>
-            <ReferenceLabComponent id="filterGenre" class="fill"/>
-            <ReferenceLabComponent id="filterKey" class="fill"/>
-            <ReferenceLabComponent id="ratingFilter" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="minBpm" class="fixed" min-width="90" max-width="90"/>
-            <ReferenceLabComponent id="maxBpm" class="fixed" min-width="90" max-width="90"/>
-            <ReferenceLabComponent id="cacheSize" class="fixed" min-width="135" max-width="135"/>
-            <ReferenceLabComponent id="cacheStatus" class="fill"/>
-            <ReferenceLabComponent id="clearCache" class="fixed" min-width="105" max-width="105"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="mixColourSelector" class="fill"/>
-            <ReferenceLabComponent id="referenceColourSelector" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="editTitle" class="fill"/>
-            <ReferenceLabComponent id="editArtist" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="editAlbum" class="fill"/>
-            <ReferenceLabComponent id="editGenre" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="editYear" class="fill"/>
-            <ReferenceLabComponent id="editBpm" class="fill"/>
-            <ReferenceLabComponent id="editKey" class="fill"/>
-            <ReferenceLabComponent id="editRating" class="fill"/>
-            <ReferenceLabComponent id="editFavourite" class="fill"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="editTags" flex-grow="1"/>
-            <ReferenceLabComponent id="editNotes" flex-grow="1"/>
-          </View>
-          <View class="row">
-            <ReferenceLabComponent id="save" class="fixed" min-width="145" max-width="145"/>
-            <ReferenceLabComponent id="savePreset" class="fixed" min-width="115" max-width="115"/>
-            <ReferenceLabComponent id="loadPreset" class="fixed" min-width="115" max-width="115"/>
-            <ReferenceLabComponent id="safeExport" class="fill"/>
-          </View>
-          <View class="fill"/>
-        </View>
-      </View>
-    </View>
+ <Styles><Style name="default"><Nodes/><Classes>
+  <header background-color="ff17212c" background-gradient="linear-gradient(0,0% ff111922,100% ff223142)" border="1" border-color="ff3c5065" radius="8" padding="4"/>
+  <workspace background-color="ff10151d" margin="8 0 0 0" padding="0"/><panel background-color="ff1b2632" border="1" border-color="ff34495d" radius="8" padding="8"/><page background-color="ff1b2632" flex-direction="column" padding="8"/>
+  <section background-color="ff16212c" border="1" border-color="ff304356" radius="7" padding="7" margin="3" caption-size="15" caption-gap="2" caption-color="ffffffff" flex-direction="column"/>
+  <row flex-direction="row" flex-grow="0" flex-shrink="0" min-height="38" max-height="42"/><parameter-row flex-direction="row" flex-grow="0" flex-shrink="0" min-height="58" max-height="62"/><fill flex-grow="1" flex-shrink="1"/><fixed flex-grow="0" flex-shrink="0"/>
+ </Classes><Types><View margin="0" padding="0"/><ReferenceLabComponent margin="3" padding="0" border="0" lookAndFeel="ReferenceLab" caption-color="ff9eb2c5" caption-size="14" caption-gap="1" button-color="ff26384a" button-on-color="ff32a7d8" button-off-text="ffe5edf4" button-on-text="ff071119" toggle-text="ffd9e4ed" toggle-tick="ff36b8e8" toggle-tick-disabled="ff526576" slider-background="ff0f1821" slider-thumb="ffecf5fa" slider-track="ff278bb3" rotary-fill="ff36b8e8" rotary-outline="ff34495d" slider-text="ffe8f1f6" slider-text-background="ff101923" slider-text-highlight="ff36b8e8" slider-text-outline="ff34495d" combo-background="ff111b25" combo-text="ffe0eaf1" combo-outline="ff3a5064" combo-button="ff26384a" combo-arrow="ff51c3ed" combo-focused-outline="ff51c3ed" label-background="00000000" label-outline="00000000" label-text="ffdce8f0" editor-background="ff111a23" editor-text="ffe2ebf1" editor-outline="ff33485b" editor-focused-outline="ff51c3ed" editor-highlight="ff287da0" editor-highlighted-text="ffffffff" list-background="ff111a23" list-outline="ff33485b" list-text="ffe2ebf1"/></Types><Palettes><default accent="ff36b8e8" reference="ffff9c45" panel="ff1b2632"/></Palettes></Style></Styles>
+ <View id="root" flex-direction="column" background-color="ff0c1219" margin="12" lookAndFeel="ReferenceLab">
+  <View id="header" class="header" flex-direction="row" flex-grow="0" flex-shrink="0" min-height="56" max-height="56">
+   <ReferenceLabComponent id="libraryDrawer" class="fixed" min-width="88" max-width="88" min-height="48" max-height="48"/><ReferenceLabComponent id="fileMenu" class="fixed" min-width="58" max-width="58" min-height="48" max-height="48"/><ReferenceLabComponent id="catalogMenu" class="fixed" min-width="82" max-width="82" min-height="48" max-height="48"/><ReferenceLabComponent id="settingsButton" class="fixed" min-width="48" max-width="48" min-height="48" max-height="48"/><ReferenceLabComponent id="title" class="fill" min-width="120"/><ReferenceLabComponent id="transportStatus" class="fixed" min-width="150" max-width="190"/><ReferenceLabComponent id="mix" class="fixed" min-width="64" max-width="72" min-height="48" max-height="48"/><ReferenceLabComponent id="ref" class="fixed" min-width="96" max-width="110" min-height="48" max-height="48"/>
   </View>
-</magic>)xml";
-    auto xml=juce::XmlDocument::parse(layout);
-    if(xml==nullptr){jassertfalse;return{};}
-    auto tree=juce::ValueTree::fromXml(*xml);
-    setGuiMagicLibraryRatio(tree,libraryWidthRatio);
-    return tree;
-}
+  <View id="workspace" class="workspace" flex-direction="row" flex-grow="1">
+   <View id="libraryPane" class="panel" flex-direction="column" min-width="290" max-width="520" flex-grow="34">
+    <ReferenceLabComponent id="librarySelector" class="fixed" min-height="36" max-height="36"/><View class="row" min-height="48" max-height="48"><ReferenceLabComponent id="search" class="fill"/><ReferenceLabComponent id="favouritesOnly" class="fixed" min-width="78" max-width="96" min-height="48" max-height="48"/></View>
+    <View class="row"><ReferenceLabComponent id="filterArtist" class="fill"/><ReferenceLabComponent id="filterGenre" class="fill"/></View><View class="row"><ReferenceLabComponent id="filterKey" class="fill"/><ReferenceLabComponent id="ratingFilter" class="fill"/></View><View class="row"><ReferenceLabComponent id="minBpm" class="fill"/><ReferenceLabComponent id="maxBpm" class="fill"/></View><View class="row"><ReferenceLabComponent id="sort" class="fill"/><ReferenceLabComponent id="sortDescending" class="fixed" min-width="58" max-width="72" min-height="48" max-height="48"/><ReferenceLabComponent id="playlist" class="fill"/></View>
+    <ReferenceLabComponent id="list" class="fill" min-height="160"/><View class="row" min-height="48" max-height="48"><ReferenceLabComponent id="previousReference" class="fixed" min-width="48" max-width="48"/><View class="fill"/><ReferenceLabComponent id="nextReference" class="fixed" min-width="48" max-width="48"/></View>
+   </View>
+   <ReferenceLabComponent id="mainSplitter" class="fixed" min-width="10" max-width="10" margin="0"/>
+   <View id="contentPane" class="panel" display="tabbed" tab-height="48" tab-selected="uiTab" min-width="430" flex-grow="66">
+    <View id="referencePage" class="page" tab-caption="Reference" border="1" border-color="ffff9c45">
+     <ReferenceLabComponent id="waveform" caption="REFERENCE WAVEFORM" caption-color="ffff9c45" class="fill" min-height="220"/>
+     <View class="section" caption="TRANSPORT" caption-color="ffff9c45" flex-grow="0" flex-shrink="0" min-height="70" max-height="74"><View class="row" min-height="52" max-height="52"><ReferenceLabComponent id="play" class="fixed" min-width="58" max-width="68" min-height="48" max-height="48"/><ReferenceLabComponent id="pause" class="fixed" min-width="64" max-width="72" min-height="48" max-height="48"/><ReferenceLabComponent id="stop" class="fixed" min-width="58" max-width="68" min-height="48" max-height="48"/><ReferenceLabComponent id="seek" caption="POSITION" control-style="linear" class="fill"/></View></View>
+     <View class="section" caption="LOOP &amp; DAW SYNC" caption-color="ffff9c45" flex-grow="0" flex-shrink="0" min-height="142" max-height="148"><View class="parameter-row"><ReferenceLabComponent id="startOffset" caption="START OFFSET" control-style="linear" class="fill"/><ReferenceLabComponent id="loopEnabled" class="fixed" min-width="58" max-width="70" min-height="48" max-height="48"/><ReferenceLabComponent id="loopStart" caption="LOOP A" control-style="linear" class="fill"/><ReferenceLabComponent id="loopEnd" caption="LOOP B" control-style="linear" class="fill"/></View><View class="parameter-row"><ReferenceLabComponent id="transportSync" class="fixed" min-width="76" max-width="90" min-height="48" max-height="48"/><ReferenceLabComponent id="syncMode" caption="SYNC" class="fixed" min-width="112" max-width="125"/><ReferenceLabComponent id="syncOffset" caption="OFFSET" control-style="linear" class="fill"/><ReferenceLabComponent id="fullLoop" class="fixed" min-width="88" max-width="108" min-height="48" max-height="48"/><ReferenceLabComponent id="resetWaveformView" class="fixed" min-width="92" max-width="118" min-height="48" max-height="48"/></View></View><ReferenceLabComponent id="hostTempoStatus" class="fixed" min-height="24" max-height="24"/>
+    </View>
+    <View id="analysisPage" class="page" tab-caption="Analysis" flex-direction="row">
+     <View class="fill" flex-direction="column"><ReferenceLabComponent id="analysisDisplay" class="fill" min-height="300"/><ReferenceLabComponent id="analysisMeters" caption="LOUDNESS / DYNAMICS / STEREO" class="fixed" min-height="138" max-height="138"/></View>
+     <View class="section" caption="ANALYSIS" scroll-mode="scroll-vertical" flex-grow="0" flex-shrink="0" min-width="176" max-width="210"><ReferenceLabComponent id="fftSize" caption="FFT SIZE" class="fixed" min-height="42" max-height="42"/><ReferenceLabComponent id="displayRate" caption="REFRESH" class="fixed" min-height="42" max-height="42"/><ReferenceLabComponent id="fftSmoothing" caption="SMOOTHING" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="analysisSlope" caption="SLOPE" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="freezeDisplay" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="swapLR" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="resetMeters" class="fixed" min-height="48" max-height="48"/></View>
+    </View>
+    <View id="comparePage" class="page" tab-caption="Compare" flex-direction="row">
+     <ReferenceLabComponent id="eqCurve" caption="POST-EQ SPECTRUM &amp; RESPONSE" class="fill" min-height="300"/>
+     <View scroll-mode="scroll-vertical" flex-direction="column" flex-grow="0" flex-shrink="0" min-width="220" max-width="260">
+      <View class="section" caption="LOUDNESS MATCH"><ReferenceLabComponent id="matchBypass" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="autoMatch" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="matchMode" caption="DETECTOR" class="fixed" min-height="42" max-height="42"/><ReferenceLabComponent id="manualGain" caption="MANUAL GAIN" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="matchedGain" caption="APPLIED" class="fixed" min-height="38" max-height="42"/></View>
+      <View class="section" caption="MONITORING"><ReferenceLabComponent id="listeningMode" caption="LISTEN MODE" class="fixed" min-height="42" max-height="42"/><View class="row" min-height="52" max-height="52"><ReferenceLabComponent id="showMidSpectrum" class="fill" min-width="48" min-height="48" max-height="48"/><ReferenceLabComponent id="showSideSpectrum" class="fill" min-width="48" min-height="48" max-height="48"/></View><ReferenceLabComponent id="fade" caption="A/B FADE" control-style="knob" class="fixed" min-height="100" max-height="108"/></View>
+      <View class="section" caption="COMPARISON FILTERS"><ReferenceLabComponent id="eqBypass" class="fixed" min-height="48" max-height="48"/><View class="row" min-height="52" max-height="52"><ReferenceLabComponent id="hpfEnabled" class="fill" min-height="48" max-height="48"/><ReferenceLabComponent id="bellEnabled" class="fill" min-height="48" max-height="48"/><ReferenceLabComponent id="lpfEnabled" class="fill" min-height="48" max-height="48"/></View><ReferenceLabComponent id="hpf" caption="HIGH PASS" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="hpfSlope" caption="HP SLOPE" class="fixed" min-height="42" max-height="42"/><ReferenceLabComponent id="bellFreq" caption="BAND FREQ" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="bellGain" caption="BAND GAIN" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="bellQ" caption="BAND Q" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="lpf" caption="LOW PASS" control-style="knob" class="fixed" min-height="100" max-height="108"/><ReferenceLabComponent id="lpfSlope" caption="LP SLOPE" class="fixed" min-height="42" max-height="42"/></View>
+     </View>
+    </View>
+    <View id="meterPage" class="page" tab-caption="Meter"><ReferenceLabComponent id="airwindowsMeter" class="fill" min-height="300"/></View>
+   </View>
+   <View id="settingsPane" class="panel" flex-direction="column" scroll-mode="scroll-vertical" min-width="300" max-width="390" flex-grow="28">
+    <View class="section" caption="LIBRARY"><View class="row" min-height="52" max-height="52"><ReferenceLabComponent id="newLibrary" class="fill" min-height="48" max-height="48"/><ReferenceLabComponent id="newPlaylist" class="fill" min-height="48" max-height="48"/><ReferenceLabComponent id="addToPlaylist" class="fill" min-height="48" max-height="48"/></View><ReferenceLabComponent id="recursiveScan" class="fixed" min-height="48" max-height="48"/></View>
+    <View class="section" caption="CACHE &amp; APPEARANCE"><ReferenceLabComponent id="cacheSize" class="fixed" min-height="38" max-height="42"/><ReferenceLabComponent id="cacheStatus" class="fixed" min-height="34" max-height="38"/><ReferenceLabComponent id="clearCache" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="mixColourSelector" class="fixed" min-height="38" max-height="42"/><ReferenceLabComponent id="referenceColourSelector" class="fixed" min-height="38" max-height="42"/></View>
+    <View class="section" caption="REFERENCE METADATA" caption-color="ffff9c45"><ReferenceLabComponent id="editTitle" class="fixed" min-height="36" max-height="40"/><ReferenceLabComponent id="editArtist" class="fixed" min-height="36" max-height="40"/><ReferenceLabComponent id="editAlbum" class="fixed" min-height="36" max-height="40"/><ReferenceLabComponent id="editGenre" class="fixed" min-height="36" max-height="40"/><View class="row"><ReferenceLabComponent id="editYear" class="fill"/><ReferenceLabComponent id="editBpm" class="fill"/><ReferenceLabComponent id="editKey" class="fill"/></View><View class="row"><ReferenceLabComponent id="editRating" class="fill"/><ReferenceLabComponent id="editFavourite" class="fill" min-height="48" max-height="48"/></View><ReferenceLabComponent id="editTags" class="fixed" min-height="40" max-height="44"/><ReferenceLabComponent id="editNotes" class="fixed" min-height="52" max-height="62"/></View>
+    <View class="section" caption="STATE &amp; PRESETS"><ReferenceLabComponent id="save" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="savePreset" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="loadPreset" class="fixed" min-height="48" max-height="48"/><ReferenceLabComponent id="safeExport" class="fixed" min-height="48" max-height="48"/></View>
+   </View>
+  </View>
+ </View>
+</magic>)xml";auto xml=juce::XmlDocument::parse(layout);if(xml==nullptr){jassertfalse;return{};}auto tree=juce::ValueTree::fromXml(*xml);setGuiMagicDrawers(tree,true,false,ratio);return tree;}
 }

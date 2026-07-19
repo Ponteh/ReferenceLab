@@ -35,6 +35,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Upstream project: https://github.com/ffAudio/foleys_gui_magic
 
+## Airwindows Meter
+
+ReferenceLab includes a project-integrated meter derived from the measurement
+approach in Airwindows Meter by Chris Johnson. The original source snapshot is
+kept in `Meter-0.2.8/` and the upstream project is:
+https://github.com/airwindows/Meter
+
 ## JUCE
 
 ReferenceLab uses JUCE 8.0.8. JUCE licensing information is available at:

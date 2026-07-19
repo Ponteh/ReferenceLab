@@ -66,6 +66,9 @@ public:
         expectWithinAbsoluteError(signal.getSample(0,0),1.0f,0.0001f);
         expectWithinAbsoluteError(signal.getSample(1,0),-1.0f,0.0001f);
 
+        beginTest("Swap L/R is identical and smoothed for Mix and Reference");
+        referencelab::ComparisonProcessor swapProcessor;swapProcessor.prepare(48000.0,600);referencelab::ComparisonSettings swapSettings;swapSettings.swapLeftRight=true;swapProcessor.update(swapSettings);juce::AudioBuffer<float>swapMix(2,600),swapReference(2,600);for(int i=0;i<600;++i){swapMix.setSample(0,i,.8f);swapMix.setSample(1,i,-.2f);swapReference.setSample(0,i,.4f);swapReference.setSample(1,i,-.6f);}swapProcessor.process(swapMix,swapReference);expectWithinAbsoluteError(swapMix.getSample(0,599),-.2f,.001f);expectWithinAbsoluteError(swapMix.getSample(1,599),.8f,.001f);expectWithinAbsoluteError(swapReference.getSample(0,599),-.6f,.001f);expectWithinAbsoluteError(swapReference.getSample(1,599),.4f,.001f);
+
         beginTest("Reference player renders cached audio");
         auto audio=std::make_shared<referencelab::ReferenceAudioData>();
         audio->sampleRate=48000.0;audio->samples.setSize(2,4);
@@ -107,7 +110,7 @@ public:
 
         beginTest("Lock-free sample FIFO preserves mono sum");
         referencelab::SampleFifo fifo;juce::AudioBuffer<float> fifoInput(2,2);fifoInput.setSample(0,0,1.f);fifoInput.setSample(1,0,-1.f);fifoInput.setSample(0,1,.5f);fifoInput.setSample(1,1,.5f);fifo.push(fifoInput);float fifoOutput[2]{};
-        expectEquals(fifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],0.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],.5f,.0001f);
+        expectEquals(fifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],0.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],.5f,.0001f);referencelab::SampleFifo sideFifo;sideFifo.push(fifoInput,referencelab::SampleChannelView::side);expectEquals(sideFifo.pull(fifoOutput,2),2);expectWithinAbsoluteError(fifoOutput[0],1.f,.0001f);expectWithinAbsoluteError(fifoOutput[1],0.f,.0001f);
 
         beginTest("Shared spectrum analyzer locates a sine wave");
         referencelab::SampleFifo spectrumFifo;juce::AudioBuffer<float> spectrumInput(2,2048);for(int i=0;i<spectrumInput.getNumSamples();++i){auto sample=(float)std::sin(2.0*juce::MathConstants<double>::pi*1000.0*i/48000.0);spectrumInput.setSample(0,i,sample);spectrumInput.setSample(1,i,sample);}spectrumFifo.push(spectrumInput);referencelab::SpectrumAnalyzer spectrumAnalyzer(11);expect(spectrumAnalyzer.update(spectrumFifo));auto&bins=spectrumAnalyzer.getSpectrum();auto peak=(int)std::distance(bins.begin(),std::max_element(bins.begin()+1,bins.end()));expect(peak>=41&&peak<=44,"Expected the FFT peak near the 1 kHz bin");

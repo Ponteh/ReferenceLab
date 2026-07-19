@@ -3,8 +3,8 @@
 #include "UiTheme.h"
 
 namespace referencelab {
-EqCurveDisplay::EqCurveDisplay(SampleFifo& source, juce::AudioProcessorValueTreeState& parameters)
-    : fifo(source), state(parameters) {
+EqCurveDisplay::EqCurveDisplay(SampleFifo& source, juce::AudioProcessorValueTreeState& parameters,const AnalysisDisplay& spectra)
+    : fifo(source),sourceSpectra(spectra), state(parameters) {
     startTimerHz(30);
 }
 
@@ -17,7 +17,7 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
     auto area = getLocalBounds().toFloat();
     g.setColour(juce::Colour(0xff151d27));
     g.fillRoundedRectangle(area, 6.0f);
-    area.reduce(10.0f, 8.0f);
+    area.removeFromLeft(48.f);area.removeFromBottom(22.f);area.reduce(8.0f, 4.0f);
     g.setFont(10.0f);
 
     for (auto db : { 0, -30, -60, -90 }) {
@@ -25,8 +25,7 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
         g.setColour(juce::Colours::white.withAlpha(0.09f));
         g.drawHorizontalLine((int)y, area.getX(), area.getRight());
         g.setColour(juce::Colours::white.withAlpha(0.45f));
-        g.drawText(juce::String(db) + " dB", (int)area.getX() + 2, (int)y - 12, 42, 12,
-                   juce::Justification::left);
+        g.drawText(juce::String(db) + " dB", 2, (int)y - 6, 43, 12,juce::Justification::right);
     }
     for (auto frequency : { 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000 }) {
         const auto x = FrequencyPlot::xForFrequency((float)frequency, area);
@@ -34,11 +33,14 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
         g.drawVerticalLine((int)x, area.getY(), area.getBottom());
         g.setColour(juce::Colours::white.withAlpha(0.4f));
         g.drawText(frequency >= 1000 ? juce::String(frequency / 1000) + "k" : juce::String(frequency),
-                   (int)x - 14, (int)area.getBottom() - 13, 28, 12, juce::Justification::centred);
+                   (int)x - 14, (int)area.getBottom() + 4, 28, 12, juce::Justification::centred);
     }
 
+    sourceSpectra.drawSourceSpectra(g,area,.42f);
+
     if (audioAvailable) {
-        auto audio = FrequencyPlot::spectrumPath(analyzer.getSpectrum(), analyzer.getFftSize(), sampleRate, area);
+        const auto slope=state.getRawParameterValue("analysisSlope")->load();
+        auto audio = FrequencyPlot::spectrumPath(analyzer.getSpectrum(), analyzer.getFftSize(), sampleRate, area,-90.f,0.f,slope);
         auto fill = audio;
         fill.lineTo(area.getRight(), area.getBottom());
         fill.lineTo(area.getX(), area.getBottom());

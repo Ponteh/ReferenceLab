@@ -13,7 +13,8 @@ float xForFrequency(float frequency, juce::Rectangle<float> area) noexcept {
 }
 
 juce::Path spectrumPath(const std::vector<float>& values, int fftSize, double sampleRate,
-                        juce::Rectangle<float> area, float minimumDb, float maximumDb) {
+                        juce::Rectangle<float> area, float minimumDb, float maximumDb,
+                        float slopeDbPerOctave) {
     juce::Path path;
     if (values.empty() || fftSize <= 0 || sampleRate <= 0.0) return path;
     for (int x = 0; x < (int)area.getWidth(); ++x) {
@@ -21,7 +22,8 @@ juce::Path spectrumPath(const std::vector<float>& values, int fftSize, double sa
         const auto frequency = frequencyAt(proportion);
         const auto bin = juce::jlimit(1, (int)values.size() - 1,
                                      (int)(frequency / sampleRate * fftSize));
-        const auto y = juce::jmap(juce::jlimit(minimumDb, maximumDb, values[(size_t)bin]),
+        const auto compensated=values[(size_t)bin]+slopeDbPerOctave*std::log2(frequency/1000.0f);
+        const auto y = juce::jmap(juce::jlimit(minimumDb, maximumDb, compensated),
                                  minimumDb, maximumDb, area.getBottom(), area.getY());
         if (x == 0) path.startNewSubPath(area.getX(), y);
         else path.lineTo(area.getX() + x, y);

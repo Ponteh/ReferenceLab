@@ -234,6 +234,17 @@ Il layout deve privilegiare chiarezza, coerenza visiva e rapidità di utilizzo, 
 
 - uso libreiria grafica professionale tramite la repo https://github.com/ffAudio/foleys_gui_magic
 - aggiunta metere di Airwindows (file presenti nella cartella Meter-0.2.8) o alla repo https://github.com/airwindows/Meter/
+- la libreria Reference deve essere un pannello laterale a comparsa, richiamabile dalla barra superiore;
+- le azioni di gestione file, cataloghi, librerie, playlist, metadati e preset devono essere raccolte in menu classici nella barra superiore, lasciando nel pannello laterale solo ricerca, filtri, ordinamento e selezione;
+- i pulsanti interattivi devono mantenere un'area minima di 48 x 48 px, mentre ComboBox, label e valori non devono ereditare l'altezza dei knob;
+- nelle pagine Analysis e Compare il visualizzatore deve rimanere fermo; soltanto il pannello dei controlli deve scorrere quando lo spazio non e sufficiente;
+- la scala dello spettro deve riservare aree distinte alle etichette degli assi, senza sovrapposizioni;
+- la waveform deve mantenere un seek preciso anche durante lo zoom e il cursore CURRENT deve rappresentare la posizione effettiva;
+- lo scope non deve annullarsi visivamente in ascolto Side;
+- Compare Monitoring deve permettere di mostrare o nascondere gli spettri Mid e Side di Mix e Reference. Mid usa una linea continua, Side una linea tratteggiata; Mix resta azzurro e Reference arancione;
+- EQ Bypass appartiene alla sezione Comparison Filters;
+- la pagina Details e sostituita dalla pagina Airwindows Meter; le impostazioni sono richiamate dall'icona a ingranaggio nella barra superiore;
+- componenti e pagine Reference usano arancione predefinito, quelli Mix azzurro predefinito e quelli neutrali bianco. Il bianco non deve essere disponibile tra i colori personalizzabili dall'utente.
 
 ## 1.5 Fuori ambito
 

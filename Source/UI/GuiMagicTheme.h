@@ -4,4 +4,5 @@
 namespace referencelab {
 juce::ValueTree createGuiMagicTheme(double libraryWidthRatio);
 void setGuiMagicLibraryRatio(juce::ValueTree&tree,double libraryWidthRatio);
+void setGuiMagicDrawers(juce::ValueTree&tree,bool libraryOpen,bool settingsOpen,double libraryWidthRatio);
 }

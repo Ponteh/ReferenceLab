@@ -15,6 +15,7 @@ ComparisonSettings comparisonSettingsFromState(const juce::AudioProcessorValueTr
     settings.bandPassQ = state.getRawParameterValue("bellQ")->load();
     settings.lowPassHz = state.getRawParameterValue("lpf")->load();
     settings.mode = static_cast<ListeningMode>((int)state.getRawParameterValue("mode")->load());
+    settings.swapLeftRight = state.getRawParameterValue("swapLR")->load() > 0.5f;
     return settings;
 }
 }
