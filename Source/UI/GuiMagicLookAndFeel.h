@@ -12,5 +12,7 @@ public:
     void drawButtonText(juce::Graphics&,juce::TextButton&,bool,bool)override;
     void drawComboBox(juce::Graphics&,int,int,bool,int,int,int,int,juce::ComboBox&)override;
     void positionComboBoxText(juce::ComboBox&,juce::Label&)override;
+    int getTabButtonBestWidth(juce::TabBarButton&,int)override;
+    void drawTabButton(juce::TabBarButton&,juce::Graphics&,bool,bool)override;
 };
 }

@@ -8,5 +8,6 @@ using MagicComponentLookup=std::function<juce::Component*(const juce::String&)>;
 
 void createMagicGuiWithComponents(foleys::MagicGUIBuilder&builder,
                                   juce::Component&parent,
-                                  const MagicComponentLookup&lookup);
+                                  MagicComponentLookup lookup);
+void releaseMagicGuiComponents(foleys::MagicGUIBuilder&builder) noexcept;
 }

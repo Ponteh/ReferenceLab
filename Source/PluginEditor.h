@@ -10,9 +10,10 @@
 #include "UI/GuiMagicComponentItem.h"
 #include "UI/GuiMagicLookAndFeel.h"
 #include "UI/AirwindowsMeter.h"
+#include <map>
 
 class ReferenceLabEditor final:public juce::AudioProcessorEditor,private juce::ListBoxModel,private juce::Timer{
-public: explicit ReferenceLabEditor(ReferenceLabAudioProcessor&);void paint(juce::Graphics&)override;void resized()override;bool keyPressed(const juce::KeyPress&)override;
+public: explicit ReferenceLabEditor(ReferenceLabAudioProcessor&);~ReferenceLabEditor()override;void paint(juce::Graphics&)override;void resized()override;bool keyPressed(const juce::KeyPress&)override;
 private:
     int getNumRows() override{return (int)rows.size();}
     void paintListBoxItem(int,juce::Graphics&,int,int,bool) override;
@@ -21,6 +22,7 @@ private:
     void timerCallback() override;
     void refreshLibrary(); void refreshPlaylists(); void refreshLibraries(); void chooseFolder(); void chooseCatalog(); void showError(const juce::String&); void saveSelected(); void removeSelected();void configurePlayback(int);void playItem(const referencelab::ReferenceMetadata&);void applyLoop();void persistPlayback();void applyTheme();void updateSourceStatus();void updateCacheStatus();
     ReferenceLabAudioProcessor&p;juce::Component magicSurface;std::unique_ptr<foleys::MagicGUIBuilder>magicBuilder;referencelab::AnalysisDisplay analysisDisplay;referencelab::AnalysisMeters analysisMeters;referencelab::ReferenceWaveform waveform;referencelab::EqCurveDisplay eqCurve;referencelab::AirwindowsMeter airwindowsMeter;referencelab::PanelResizer mainSplitter;juce::TextButton libraryDrawer{"LIBRARY"},fileMenu{"FILE"},catalogMenu{"CATALOG"},settingsButton,add{"Aggiungi file"},scan{"Scansiona cartella"},importCatalog{"Importa JSON"},addUrl{"Sorgente web"},remove{"Rimuovi"},relink{"Ricollega"},save{"Salva metadati"},savePreset{"Salva preset"},loadPreset{"Carica preset"},resetMeters{"Reset meter"},newLibrary{"Nuova libreria"},newPlaylist{"Nuova"},addToPlaylist{"+ Playlist"},previousReference{"<"},nextReference{">"},mix{"MIX"},ref{"REFERENCE"},play{"Play"},pause{"Pause"},stop{"Stop"},resetWaveformView{"Vista intera"},fullLoop{"Loop intero"},clearCache{"Svuota cache"};
+    std::map<juce::String,juce::Component*>magicComponents;
     juce::Label title,matchedGain,transportStatus,hostTempoStatus,cacheStatus;juce::TextEditor search,filterArtist,filterGenre,filterKey,minBpm,maxBpm,editTitle,editArtist,editAlbum,editGenre,editYear,editBpm,editKey,editRating,editTags,editNotes;juce::TextButton recursiveScan{"Sottocartelle"},favouritesOnly{"Solo preferiti"},sortDescending{"Desc."},editFavourite{"Preferita"},autoMatch{"Auto Match"},matchBypass{"Match Bypass"},freezeDisplay{"Freeze"},swapLR{"Swap L/R"},showMidSpectrum{"MID"},showSideSpectrum{"SIDE"},safeExport{"Safe Export"},loopEnabled{"Loop"},eqBypass{"EQ Bypass"},hpfEnabled{"HPF"},bellEnabled{"Band Pass"},lpfEnabled{"LPF"},transportSync{"Sync DAW"};juce::ComboBox sort,ratingFilter,cacheSize,matchMode,syncMode,listeningMode,hpfSlope,lpfSlope,fftSize,displayRate,mixColourSelector,referenceColourSelector;juce::Slider manualGain,seek,startOffset,loopStart,loopEnd,fade,hpf,bellFreq,bellGain,bellQ,lpf,syncOffset,fftSmoothing,analysisSlope;juce::ListBox list{"Reference library",this};
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>autoMatchAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>matchModeAttachment,syncModeAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>manualGainAttachment;
     std::unique_ptr<juce::AudioProcessorValueTreeState::ButtonAttachment>eqBypassAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::ComboBoxAttachment>listeningModeAttachment;std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment>fadeAttachment,hpfAttachment,bellFreqAttachment,bellGainAttachment,bellQAttachment,lpfAttachment;

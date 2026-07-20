@@ -1,16 +1,29 @@
 #include "GuiMagicComponentItem.h"
+#include <map>
 
 namespace referencelab {
 namespace {
-thread_local const MagicComponentLookup*activeLookup=nullptr;
+juce::CriticalSection lookupLock;
+std::map<foleys::MagicGUIBuilder*,MagicComponentLookup> componentLookups;
+
+juce::Component*findRegisteredComponent(foleys::MagicGUIBuilder&builder,const juce::String&id)
+{
+    MagicComponentLookup lookup;
+    {
+        const juce::ScopedLock lock(lookupLock);
+        const auto found=componentLookups.find(&builder);
+        if(found==componentLookups.end())return nullptr;
+        lookup=found->second;
+    }
+    return lookup?lookup(id):nullptr;
+}
 
 class ExistingComponentItem final:public foleys::GuiItem {
 public:
     ExistingComponentItem(foleys::MagicGUIBuilder&builder,const juce::ValueTree&node)
         :GuiItem(builder,node)
     {
-        if(activeLookup!=nullptr)
-            component=(*activeLookup)(node.getProperty("id").toString());
+        component=findRegisteredComponent(builder,node.getProperty("id").toString());
         jassert(component!=nullptr);
         if(dynamic_cast<juce::Slider*>(component)!=nullptr)
             setColourTranslation({{"slider-background",juce::Slider::backgroundColourId},{"slider-thumb",juce::Slider::thumbColourId},{"slider-track",juce::Slider::trackColourId},{"rotary-fill",juce::Slider::rotarySliderFillColourId},{"rotary-outline",juce::Slider::rotarySliderOutlineColourId},{"slider-text",juce::Slider::textBoxTextColourId},{"slider-text-background",juce::Slider::textBoxBackgroundColourId},{"slider-text-highlight",juce::Slider::textBoxHighlightColourId},{"slider-text-outline",juce::Slider::textBoxOutlineColourId}});
@@ -63,12 +76,19 @@ private:
 
 void createMagicGuiWithComponents(foleys::MagicGUIBuilder&builder,
                                   juce::Component&parent,
-                                  const MagicComponentLookup&lookup)
+                                  MagicComponentLookup lookup)
 {
+    {
+        const juce::ScopedLock lock(lookupLock);
+        componentLookups[&builder]=std::move(lookup);
+    }
     builder.registerFactory("ReferenceLabComponent",&ExistingComponentItem::factory);
-    const auto*previous=activeLookup;
-    activeLookup=&lookup;
     builder.createGUI(parent);
-    activeLookup=previous;
+}
+
+void releaseMagicGuiComponents(foleys::MagicGUIBuilder&builder) noexcept
+{
+    const juce::ScopedLock lock(lookupLock);
+    componentLookups.erase(&builder);
 }
 }

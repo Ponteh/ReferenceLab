@@ -10,6 +10,15 @@ GuiMagicLookAndFeel::GuiMagicLookAndFeel()
     setColour(juce::TooltipWindow::backgroundColourId,juce::Colour(0xf21a2632));
     setColour(juce::TooltipWindow::textColourId,juce::Colour(0xffe5eef4));
     setColour(juce::TooltipWindow::outlineColourId,juce::Colour(0xff3d566b));
+    setColour(juce::TabbedButtonBar::tabTextColourId,juce::Colours::white.withAlpha(.78f));
+    setColour(juce::TabbedButtonBar::frontTextColourId,juce::Colours::black);
+}
+
+int GuiMagicLookAndFeel::getTabButtonBestWidth(juce::TabBarButton&button,int) { return juce::jmax(76,button.getButtonText().length()*8+28); }
+
+void GuiMagicLookAndFeel::drawTabButton(juce::TabBarButton&button,juce::Graphics&g,bool over,bool down)
+{
+    auto area=button.getActiveArea().toFloat().reduced(2.f,3.f);const auto selected=button.isFrontTab();auto background=selected?juce::Colours::white:juce::Colour(0xff17222d);if(!selected&&over)background=juce::Colour(0xff253748);if(down)background=background.darker(.12f);g.setColour(background);g.fillRoundedRectangle(area,5.f);g.setColour(selected?juce::Colours::white:juce::Colour(0xff3b5063));g.drawRoundedRectangle(area,5.f,1.f);g.setColour(selected?juce::Colours::black:juce::Colours::white.withAlpha(button.isEnabled()?1.f:.4f));g.setFont(juce::FontOptions(13.f,juce::Font::bold));g.drawFittedText(button.getButtonText(),button.getTextArea().reduced(8,2),juce::Justification::centred,1);
 }
 
 void GuiMagicLookAndFeel::drawRotarySlider(juce::Graphics&g,int x,int y,int width,int height,float position,float startAngle,float endAngle,juce::Slider&slider)
