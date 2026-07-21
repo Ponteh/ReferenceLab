@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../Audio/SampleFifo.h"
-#include "AnalysisDisplay.h"
 #include "../Audio/SpectrumAnalyzer.h"
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_events/juce_events.h>
@@ -10,24 +9,17 @@
 namespace referencelab {
 class EqCurveDisplay final : public juce::Component, private juce::Timer {
 public:
-    EqCurveDisplay(SampleFifo&, juce::AudioProcessorValueTreeState&,const AnalysisDisplay&);
+    EqCurveDisplay(SampleFifo& mixMid,SampleFifo& referenceMid,SampleFifo& mixSide,SampleFifo& referenceSide,juce::AudioProcessorValueTreeState&);
     void paint(juce::Graphics&) override;
     void setSampleRate(double value) noexcept { sampleRate = value > 0.0 ? value : 44100.0; }
-    void setAudioColour(juce::Colour value) noexcept
-    {
-        if (audioColour != value) { audioColour = value; repaint(); }
-    }
-    void setAudioAvailable(bool value) noexcept
-    {
-        if (audioAvailable != value) { audioAvailable = value; repaint(); }
-    }
+    void setReferenceSelected(bool value)noexcept{if(referenceSelected!=value){referenceSelected=value;repaint();}}
+    void setReferenceAvailable(bool value)noexcept{if(referenceAvailable!=value){referenceAvailable=value;repaint();}}
 
 private:
-    SampleFifo& fifo;const AnalysisDisplay&sourceSpectra;
+    SampleFifo&mixMidFifo,&referenceMidFifo,&mixSideFifo,&referenceSideFifo;
     juce::AudioProcessorValueTreeState& state;
-    SpectrumAnalyzer analyzer{11};
-    juce::Colour audioColour{0xff54c6eb};
-    bool audioAvailable = true;
+    SpectrumAnalyzer mixMidAnalyzer{11},referenceMidAnalyzer{11},mixSideAnalyzer{11},referenceSideAnalyzer{11};
+    bool referenceSelected=false,referenceAvailable=false;
     double sampleRate = 44100.0;
 
     void timerCallback() override;

@@ -12,11 +12,12 @@ public:
     void mouseMove(const juce::MouseEvent&)override;void mouseDrag(const juce::MouseEvent&)override;void mouseExit(const juce::MouseEvent&)override;
     void setSampleRate(double value)noexcept{sampleRate=value>0?value:44100.0;}
     void drawSourceSpectra(juce::Graphics&,juce::Rectangle<float>,float alpha=1.f)const;
+    void setReferenceSelected(bool value)noexcept{if(referenceSelected!=value){referenceSelected=value;repaint();}}
     void setFrozen(bool value)noexcept{frozen=value;}void setFftOrder(int);void setSmoothing(float value)noexcept{mixAnalyzer.setSmoothing(value);referenceAnalyzer.setSmoothing(value);mixSideAnalyzer.setSmoothing(value);referenceSideAnalyzer.setSmoothing(value);}void setRefreshRate(int hz){startTimerHz(juce::jlimit(10,60,hz));}
 private:
-    static constexpr int maxOrder=12,maxSize=1<<maxOrder;
-    SampleFifo&mixFifo,&referenceFifo,&mixSideFifo,&referenceSideFifo,&outputFifo;juce::AudioProcessorValueTreeState&state;double sampleRate=44100.0;SpectrumAnalyzer mixAnalyzer{11},referenceAnalyzer{11},mixSideAnalyzer{11},referenceSideAnalyzer{11};bool frozen=false;
-    std::array<float,maxSize>outputTime{},scratch{};juce::Point<float>cursorPosition;bool cursorVisible=false;
-    void timerCallback()override;void consume(SampleFifo&,std::array<float,maxSize>&);void paintCursor(juce::Graphics&);juce::Rectangle<float> spectrumBounds()const noexcept;
+    static constexpr int scopeSize=1<<12;
+    SampleFifo&mixFifo,&referenceFifo,&mixSideFifo,&referenceSideFifo,&outputFifo;juce::AudioProcessorValueTreeState&state;double sampleRate=44100.0;SpectrumAnalyzer mixAnalyzer{11},referenceAnalyzer{11},mixSideAnalyzer{11},referenceSideAnalyzer{11};bool frozen=false,referenceSelected=false;
+    std::array<float,scopeSize>outputTime{},scratch{};juce::Point<float>cursorPosition;bool cursorVisible=false;
+    void timerCallback()override;void consume(SampleFifo&,std::array<float,scopeSize>&);void paintCursor(juce::Graphics&);juce::Rectangle<float> spectrumBounds()const noexcept;
 };
 }

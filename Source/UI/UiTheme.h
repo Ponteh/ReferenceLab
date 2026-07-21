@@ -8,7 +8,7 @@ class UiTheme {
 public:
     static juce::Colour mix(const juce::ValueTree&) noexcept;
     static juce::Colour reference(const juce::ValueTree&) noexcept;
-    static juce::Colour equalizer() noexcept { return juce::Colour(0xff9be564); }
+    static juce::Colour equalizer() noexcept { return juce::Colours::white; }
     static juce::Colour palette(int id) noexcept;
     static int paletteId(juce::Colour) noexcept;
     static void setMix(juce::ValueTree&,juce::Colour,juce::UndoManager* = nullptr);

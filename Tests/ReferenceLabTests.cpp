@@ -69,6 +69,9 @@ public:
         beginTest("Swap L/R is identical and smoothed for Mix and Reference");
         referencelab::ComparisonProcessor swapProcessor;swapProcessor.prepare(48000.0,600);referencelab::ComparisonSettings swapSettings;swapSettings.swapLeftRight=true;swapProcessor.update(swapSettings);juce::AudioBuffer<float>swapMix(2,600),swapReference(2,600);for(int i=0;i<600;++i){swapMix.setSample(0,i,.8f);swapMix.setSample(1,i,-.2f);swapReference.setSample(0,i,.4f);swapReference.setSample(1,i,-.6f);}swapProcessor.process(swapMix,swapReference);expectWithinAbsoluteError(swapMix.getSample(0,599),-.2f,.001f);expectWithinAbsoluteError(swapMix.getSample(1,599),.8f,.001f);expectWithinAbsoluteError(swapReference.getSample(0,599),-.6f,.001f);expectWithinAbsoluteError(swapReference.getSample(1,599),.4f,.001f);
 
+        beginTest("Listen mode is isolated from the Compare signal");
+        referencelab::ComparisonProcessor monitorProcessor;monitorProcessor.prepare(48000.0,600);referencelab::ComparisonSettings monitorSettings;monitorSettings.bypass=true;monitorSettings.mode=referencelab::ListeningMode::side;monitorProcessor.update(monitorSettings);juce::AudioBuffer<float>compareMix(2,600),compareReference(2,600);for(int i=0;i<600;++i){compareMix.setSample(0,i,.8f);compareMix.setSample(1,i,.2f);compareReference.setSample(0,i,.4f);compareReference.setSample(1,i,.1f);}monitorProcessor.processEqualizer(compareMix,compareReference);expectWithinAbsoluteError(compareMix.getSample(0,599),.8f,.0001f);expectWithinAbsoluteError(compareMix.getSample(1,599),.2f,.0001f);monitorProcessor.processListeningMode(compareMix);expectWithinAbsoluteError(compareMix.getSample(0,599),.3f,.001f);expectWithinAbsoluteError(compareMix.getSample(1,599),-.3f,.001f);
+
         beginTest("Reference player renders cached audio");
         auto audio=std::make_shared<referencelab::ReferenceAudioData>();
         audio->sampleRate=48000.0;audio->samples.setSize(2,4);
@@ -114,6 +117,9 @@ public:
 
         beginTest("Shared spectrum analyzer locates a sine wave");
         referencelab::SampleFifo spectrumFifo;juce::AudioBuffer<float> spectrumInput(2,2048);for(int i=0;i<spectrumInput.getNumSamples();++i){auto sample=(float)std::sin(2.0*juce::MathConstants<double>::pi*1000.0*i/48000.0);spectrumInput.setSample(0,i,sample);spectrumInput.setSample(1,i,sample);}spectrumFifo.push(spectrumInput);referencelab::SpectrumAnalyzer spectrumAnalyzer(11);expect(spectrumAnalyzer.update(spectrumFifo));auto&bins=spectrumAnalyzer.getSpectrum();auto peak=(int)std::distance(bins.begin(),std::max_element(bins.begin()+1,bins.end()));expect(peak>=41&&peak<=44,"Expected the FFT peak near the 1 kHz bin");
+
+        beginTest("Spectrum analyzer supports FFT 32768");
+        referencelab::SpectrumAnalyzer extendedSpectrum(15);expectEquals(extendedSpectrum.getFftSize(),32768);
 
         beginTest("Metadata repository saves atomically and reloads Unicode");
         auto testDirectory=juce::File::getSpecialLocation(juce::File::tempDirectory).getNonexistentChildFile("ReferenceLabTests",{},false);testDirectory.createDirectory();referencelab::MetadataRepository repository(testDirectory.getChildFile("reference.json"));referencelab::ReferenceLibrary library;library.root=testDirectory;referencelab::ReferenceMetadata stored;stored.uuid="repository-test";stored.title=juce::String::fromUTF8("Traccia è");stored.source="track.wav";library.references.push_back(stored);juce::String repositoryError;expect(repository.save(library,repositoryError),repositoryError);auto loaded=repository.load(repositoryError);expectEquals((int)loaded.references.size(),1);if(!loaded.references.empty())expectEquals(loaded.references.front().title,stored.title);expect(repository.save(library,repositoryError),repositoryError);expect(testDirectory.getChildFile("reference.json.bak").existsAsFile());testDirectory.deleteRecursively();

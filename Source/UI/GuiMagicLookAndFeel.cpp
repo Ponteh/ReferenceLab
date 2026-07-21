@@ -12,6 +12,9 @@ GuiMagicLookAndFeel::GuiMagicLookAndFeel()
     setColour(juce::TooltipWindow::outlineColourId,juce::Colour(0xff3d566b));
     setColour(juce::TabbedButtonBar::tabTextColourId,juce::Colours::white.withAlpha(.78f));
     setColour(juce::TabbedButtonBar::frontTextColourId,juce::Colours::black);
+    setColour(juce::ScrollBar::thumbColourId,juce::Colours::white.withAlpha(.82f));
+    setColour(juce::ScrollBar::trackColourId,juce::Colour(0xff17212b));
+    setColour(juce::ScrollBar::backgroundColourId,juce::Colour(0xff101820));
 }
 
 int GuiMagicLookAndFeel::getTabButtonBestWidth(juce::TabBarButton&button,int) { return juce::jmax(76,button.getButtonText().length()*8+28); }

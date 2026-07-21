@@ -37,9 +37,9 @@ Upstream project: https://github.com/ffAudio/foleys_gui_magic
 
 ## Airwindows Meter
 
-ReferenceLab includes a project-integrated meter derived from the measurement
-approach in Airwindows Meter by Chris Johnson. The original source snapshot is
-kept in `Meter-0.2.8/` and the upstream project is:
+ReferenceLab uses an independently rendered meter whose audio measurement model
+is derived from the upstream RMS, peak, slew and zero-crossing calculations.
+All product implementation is kept in `Source/`. The upstream project is:
 https://github.com/airwindows/Meter
 
 ## JUCE

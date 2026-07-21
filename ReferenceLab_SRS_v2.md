@@ -233,7 +233,7 @@ L’interfaccia della versione 2 deve consentire all’utente di identificare im
 Il layout deve privilegiare chiarezza, coerenza visiva e rapidità di utilizzo, evitando pannelli sovraccarichi o informazioni duplicate.
 
 - uso libreiria grafica professionale tramite la repo https://github.com/ffAudio/foleys_gui_magic
-- aggiunta metere di Airwindows (file presenti nella cartella Meter-0.2.8) o alla repo https://github.com/airwindows/Meter/
+- integrazione delle misure RMS, peak, slew e zero crossing derivate da Airwindows Meter 0.2.8, con renderer ReferenceLab mantenuto interamente in `Source`; lo snapshot `Meter-0.2.8` resta non modificato e fuori dalla build;
 - la libreria Reference deve essere un pannello laterale a comparsa, richiamabile dalla barra superiore;
 - le azioni di gestione file, cataloghi, librerie, playlist, metadati e preset devono essere raccolte in menu classici nella barra superiore, lasciando nel pannello laterale solo ricerca, filtri, ordinamento e selezione;
 - i pulsanti interattivi devono mantenere un'area minima di 48 x 48 px, mentre ComboBox, label e valori non devono ereditare l'altezza dei knob;
@@ -241,7 +241,12 @@ Il layout deve privilegiare chiarezza, coerenza visiva e rapidità di utilizzo, 
 - la scala dello spettro deve riservare aree distinte alle etichette degli assi, senza sovrapposizioni;
 - la waveform deve mantenere un seek preciso anche durante lo zoom e il cursore CURRENT deve rappresentare la posizione effettiva;
 - lo scope non deve annullarsi visivamente in ascolto Side;
-- Compare Monitoring deve permettere di mostrare o nascondere gli spettri Mid e Side di Mix e Reference. Mid usa una linea continua, Side una linea tratteggiata; Mix resta azzurro e Reference arancione;
+- Compare deve mostrare gli spettri post-EQ Mid e Side di Mix e Reference, controllati esclusivamente dai pulsanti Mid e Side e indipendenti dalla modalita di ascolto. Entrambi i livelli sono attivi per impostazione predefinita; disattivandoli entrambi non viene mostrato alcuno spettro;
+- gli spettri Mid e Side usano linee continue. La sorgente in ascolto mantiene linea e area colorata, mentre la sorgente non selezionata mantiene soltanto la sagoma; l'area Side deve essere piu opaca dell'area Mid;
+- Listen Mode e Swap L/R appartengono al pannello Analysis e il relativo risultato deve essere rappresentato soltanto dallo scope e dai meter Output di Analysis, senza alterare visivamente gli spettri Compare;
+- lo spettro principale di Analysis deve seguire esclusivamente Listen Mode per entrambe le sorgenti: Stereo mostra una sola curva spettrale per Mix e una per Reference, Mono e Mid mostrano il contenuto Mid, Side mostra il contenuto Side; la sorgente selezionata mantiene anche l'area colorata;
+- High Pass, Band Pass e Low Pass devono occupare tre colonne di uguale larghezza nella sezione Comparison Filters; curva EQ, controlli EQ e Loudness Match usano il colore neutrale bianco;
+- A/B Fade, scrollbar dei pannelli Analysis e Compare e intestazione Output usano il colore neutrale bianco;
 - EQ Bypass appartiene alla sezione Comparison Filters;
 - la pagina Details e sostituita dalla pagina Airwindows Meter; le impostazioni sono richiamate dall'icona a ingranaggio nella barra superiore;
 - componenti e pagine Reference usano arancione predefinito, quelli Mix azzurro predefinito e quelli neutrali bianco. Il bianco non deve essere disponibile tra i colori personalizzabili dall'utente.
@@ -591,25 +596,30 @@ DAW INPUT -------------->| Mix Input Buffer |
        | Processing       |                       | Processing       |
        +--------+---------+                       +--------+---------+
                 |                                           |
-                +---------------------+---------------------+
-                                      |
-                                      v
-                           +----------------------+
-                           | Loudness Matching    |
-                           +----------+-----------+
-                                      |
-                                      v
-                           +----------------------+
-                           | A/B Router + Fade    |
-                           +----------+-----------+
-                                      |
-                                      v
-                           +----------------------+
-                           | Output Analysis Tap  |
-                           +----------+-----------+
-                                      |
-                                      v
-                                  DAW OUTPUT
+                +----------+----------------------+---------+
+                           |                      |
+                           v                      v
+                +--------------------+   +--------------------+
+                | Compare Mid/Side   |   | Loudness Matching  |
+                | post-EQ taps       |   +---------+----------+
+                +--------------------+             |
+                                                   v
+                                        +----------------------+
+                                        | A/B Router + Fade    |
+                                        +----------+-----------+
+                                                   |
+                                                   v
+                                        +----------------------+
+                                        | Listen Mode + Swap   |
+                                        +----------+-----------+
+                                                   |
+                                                   v
+                                        +----------------------+
+                                        | Output Analysis Tap  |
+                                        +----------+-----------+
+                                                   |
+                                                   v
+                                               DAW OUTPUT
 ```
 
 ## 6.2 Ordine delle elaborazioni
@@ -619,13 +629,14 @@ Ordine logico proposto:
 1. acquisizione Mix;
 2. acquisizione Reference;
 3. resampling reference;
-4. applicazione modalità Stereo/Mono/Mid/Side;
-5. EQ di confronto;
-6. gain di loudness matching;
+4. EQ di confronto;
+5. gain di loudness matching;
+6. tap post-EQ Mid/Side separati per Mix e Reference destinati a Compare;
 7. A/B routing;
 8. crossfade;
-9. analisi del segnale in ascolto;
-10. output.
+9. applicazione della modalità Stereo/Mono/Mid/Side e Swap L/R al solo segnale in ascolto;
+10. analisi del segnale in ascolto;
+11. output.
 
 L'analisi separata di Mix e Reference può essere effettuata tramite tap dedicati prima o dopo le elaborazioni di confronto, configurabili in base al parametro visualizzato.
 
@@ -849,9 +860,15 @@ Il plugin deve mostrare lo spettro FFT.
 
 Il plugin deve sovrapporre gli spettri di Mix e Reference.
 
+In Compare devono essere disponibili simultaneamente i livelli Mid e Side post-EQ di entrambe le sorgenti. I pulsanti Mid e Side controllano in modo indipendente la visibilità del relativo livello per entrambe le sorgenti e devono essere attivi per impostazione predefinita. Se entrambi sono disattivati non deve essere disegnato alcuno spettro.
+
+La sorgente selezionata per l'ascolto deve avere linea e area colorata; quella non selezionata deve conservare soltanto la linea di contorno. Mid e Side devono usare linee continue, con il riempimento Side più opaco del riempimento Mid. La modalità Stereo/Mono/Mid/Side non deve modificare questa rappresentazione Compare.
+
 ### RF-049 – Configurazione FFT
 
 L'utente deve poter configurare dimensione FFT, smoothing, averaging e velocità di aggiornamento.
+
+Le dimensioni FFT disponibili devono includere 1024, 2048, 4096, 8192, 16384 e 32768 campioni.
 
 ### RF-049A – Slope degli spettri
 
@@ -902,6 +919,16 @@ L'utente deve poter azzerare i valori integrati e massimi.
 ### RF-060 – Freeze display
 
 L'utente deve poter congelare temporaneamente le visualizzazioni.
+
+### RF-060A – Meter temporale derivato da Airwindows
+
+La pagina Meter deve mantenere le misure RMS, peak, slew e zero crossing derivate da Airwindows Meter 0.2.8, presentandole in tre fasce temporali coerenti con la grafica di ReferenceLab. Tutto il codice eseguito dal prodotto deve risiedere in `Source`; lo snapshot upstream `Meter-0.2.8` deve rimanere non modificato e fuori dalla build.
+
+Titoli, scale e valori devono occupare una colonna distinta dall'area grafica, restare leggibili e non sovrapporsi ai dati anche alla dimensione minima del plug-in. I colori funzionali delle misure devono restare distinguibili sul tema scuro.
+
+Il bordo inferiore di ognuna delle tre fasce deve conservare una cronologia colorata della sorgente riprodotta: colore Mix per i segmenti Mix e colore Reference per i segmenti Reference. Ogni cambio Mix/Reference e ogni sostituzione della reference deve produrre una linea verticale confinata alle tre aree grafiche; segmenti e separatori restano visibili finché escono naturalmente dalla vista scorrevole. Il doppio clic cancella la sola cronologia visiva.
+
+Il renderer usa il tema scuro, le proporzioni e la gerarchia visiva di ReferenceLab; non incorpora componenti UI dello snapshot upstream.
 
 ## 7.9 Libreria reference
 
@@ -1392,9 +1419,9 @@ public:
 +--------------------------+-----------------------------------------------------+
 | COMPARISON EQ                                                                  |
 | HPF: 80 Hz | Band Pass: 2.7 kHz / +0.0 dB / Q 1.0 | LPF: 12 kHz             |
-| Mode: [Stereo] [Mono] [Mid] [Side]                         [Swap L/R]          |
 +--------------------------------------------------------------------------------+
-| FFT OVERLAY                                      Slope: [ 4.5 dB/oct ]         |
+| ANALYSIS  Listen: [Stereo/Mono/Mid/Side] [Swap L/R] Slope: [4.5 dB/oct]       |
+| COMPARE   Layers: [Mid On] [Side On]  Mix + Reference post-EQ                 |
 +--------------------------------------------------------------------------------+
 | MIX              | REFERENCE         | OUTPUT                                  |
 | LUFS / Peak / RMS | LUFS / Peak / RMS | Correlation / Width / Oscilloscope     |

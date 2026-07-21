@@ -13,6 +13,8 @@ class ComparisonProcessor {
 public:
     void prepare(double sampleRate,int maximumBlockSize)noexcept;void update(const ComparisonSettings&)noexcept;
     void process(juce::AudioBuffer<float>&mix,juce::AudioBuffer<float>&reference)noexcept;
+    void processEqualizer(juce::AudioBuffer<float>&mix,juce::AudioBuffer<float>&reference)noexcept;
+    void processListeningMode(juce::AudioBuffer<float>&output)noexcept;
     static void applyListeningMode(juce::AudioBuffer<float>&,ListeningMode)noexcept;
     static float responseDecibelsAt(const ComparisonSettings&,float frequency,double sampleRate)noexcept;
 private:

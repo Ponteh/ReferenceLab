@@ -5,7 +5,7 @@ namespace referencelab {
 SpectrumAnalyzer::SpectrumAnalyzer(int order) { setFftOrder(order); }
 
 void SpectrumAnalyzer::setFftOrder(int order) {
-    order = juce::jlimit(10, 12, order);
+    order = juce::jlimit(10, 15, order);
     fftSize = 1 << order;
     fft = std::make_unique<juce::dsp::FFT>(order);
     window = std::make_unique<juce::dsp::WindowingFunction<float>>(

@@ -3,13 +3,13 @@
 #include "UiTheme.h"
 
 namespace referencelab {
-EqCurveDisplay::EqCurveDisplay(SampleFifo& source, juce::AudioProcessorValueTreeState& parameters,const AnalysisDisplay& spectra)
-    : fifo(source),sourceSpectra(spectra), state(parameters) {
+EqCurveDisplay::EqCurveDisplay(SampleFifo&mixMid,SampleFifo&referenceMid,SampleFifo&mixSide,SampleFifo&referenceSide,juce::AudioProcessorValueTreeState&parameters)
+    :mixMidFifo(mixMid),referenceMidFifo(referenceMid),mixSideFifo(mixSide),referenceSideFifo(referenceSide),state(parameters) {
     startTimerHz(30);
 }
 
 void EqCurveDisplay::timerCallback() {
-    analyzer.update(fifo);
+    mixMidAnalyzer.update(mixMidFifo);referenceMidAnalyzer.update(referenceMidFifo);mixSideAnalyzer.update(mixSideFifo);referenceSideAnalyzer.update(referenceSideFifo);
     repaint();
 }
 
@@ -36,21 +36,17 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
                    (int)x - 14, (int)area.getBottom() + 4, 28, 12, juce::Justification::centred);
     }
 
-    sourceSpectra.drawSourceSpectra(g,area,.42f);
-
-    if (audioAvailable) {
-        const auto slope=state.getRawParameterValue("analysisSlope")->load();
-        auto audio = FrequencyPlot::spectrumPath(analyzer.getSpectrum(), analyzer.getFftSize(), sampleRate, area,-90.f,0.f,slope);
-        auto fill = audio;
-        fill.lineTo(area.getRight(), area.getBottom());
-        fill.lineTo(area.getX(), area.getBottom());
-        fill.closeSubPath();
-        g.setGradientFill(juce::ColourGradient(audioColour.withAlpha(.44f), area.getX(), area.getY(),
-                                              audioColour.withAlpha(.06f), area.getX(), area.getBottom(), false));
-        g.fillPath(fill);
-        g.setColour(audioColour);
-        g.strokePath(audio, juce::PathStrokeType(1.3f));
-    }
+    const auto mixColour=UiTheme::mix(state.state),referenceColour=UiTheme::reference(state.state);
+    const auto slope=state.getRawParameterValue("analysisSlope")->load();
+    const bool showMid=state.getRawParameterValue("showMidSpectrum")->load()>.5f,showSide=state.getRawParameterValue("showSideSpectrum")->load()>.5f;
+    auto draw=[&](const SpectrumAnalyzer&analyzer,juce::Colour colour,bool selected,float fillAlpha,float lineAlpha)
+    {
+        auto path=FrequencyPlot::spectrumPath(analyzer.getSpectrum(),analyzer.getFftSize(),sampleRate,area,-90.f,0.f,slope);
+        if(selected){auto fill=path;fill.lineTo(area.getRight(),area.getBottom());fill.lineTo(area.getX(),area.getBottom());fill.closeSubPath();g.setColour(colour.withAlpha(fillAlpha));g.fillPath(fill);}
+        g.setColour(colour.withAlpha(lineAlpha));g.strokePath(path,juce::PathStrokeType(selected?1.8f:1.35f));
+    };
+    if(showMid){draw(mixMidAnalyzer,mixColour,!referenceSelected,.14f,referenceSelected ? .72f : 1.f);if(referenceAvailable)draw(referenceMidAnalyzer,referenceColour,referenceSelected,.14f,referenceSelected ? 1.f : .72f);}
+    if(showSide){draw(mixSideAnalyzer,mixColour,!referenceSelected,.25f,referenceSelected ? .58f : .86f);if(referenceAvailable)draw(referenceSideAnalyzer,referenceColour,referenceSelected,.25f,referenceSelected ? .86f : .58f);}
 
     const auto bypassed = state.getRawParameterValue("eqBypass")->load() > 0.5f;
     if (!bypassed) {
@@ -60,8 +56,9 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
     }
 
     auto legend = area.toNearestInt().removeFromTop(18);
-    g.setColour(audioColour);
-    g.drawText(audioAvailable ? "POST-EQ AUDIO" : "NESSUNA REFERENCE", legend.removeFromLeft(125), juce::Justification::left);
+    g.setColour(mixColour);g.drawText(referenceSelected?"MIX outline":"MIX selected",legend.removeFromLeft(82),juce::Justification::left);
+    g.setColour(referenceColour);g.drawText(!referenceAvailable?"REF unavailable":referenceSelected?"REF selected":"REF outline",legend.removeFromLeft(92),juce::Justification::left);
+    g.setColour(juce::Colours::white.withAlpha(.72f));g.drawText(!showMid&&!showSide?"NO LAYERS":showMid&&showSide?"MID + SIDE":showMid?"MID":"SIDE",legend.removeFromLeft(75),juce::Justification::left);
     g.setColour(bypassed ? juce::Colours::white.withAlpha(0.55f) : UiTheme::equalizer());
     g.drawText(bypassed ? "EQ BYPASSED" : "EQ RESPONSE", legend, juce::Justification::right);
 }
