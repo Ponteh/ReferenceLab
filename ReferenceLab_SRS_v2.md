@@ -790,6 +790,12 @@ Le variazioni automatiche di gain devono essere smussate.
 
 Il gain automatico deve essere limitato a un intervallo configurabile.
 
+### RF-033A - Target LUFS configurabile per Auto Match
+
+Quando Auto Match e attivo, l'utente deve poter definire un livello LUFS target comune. Mix e Reference devono essere misurate separatamente e ciascuna deve ricevere la compensazione necessaria per raggiungere lo stesso target durante l'ascolto, senza dipendere dalla sorgente selezionata nel controllo A/B.
+
+Il valore target deve essere mostrato chiaramente nella sezione Loudness Match, salvato e ripristinato nello stato del plugin. Le variazioni di gain devono rispettare smoothing, limite di sicurezza, bypass e modalita di rilevamento selezionata. L'Auto Match non deve modificare i file sorgente.
+
 ## 7.6 EQ di confronto
 
 ### RF-034 – Applicazione simmetrica
@@ -878,9 +884,21 @@ Il pannello Analysis deve fornire un pomello Slope configurabile da 0,0 a 4,5 dB
 
 Lo Slope deve essere una compensazione esclusivamente grafica, applicata uniformemente a tutti gli spettri FFT visualizzati. Il controllo deve rimanere operativo in modalità Freeze, deve mostrare il valore numerico corrente e deve essere salvato e ripristinato nello stato del plugin.
 
+### RF-049B - FFT Size condivisa tra Analysis e Compare
+
+La dimensione FFT selezionata nel pannello Analysis deve essere applicata anche agli spettri della pagina Compare. Compare non deve introdurre un secondo selettore FFT Size: il controllo di Analysis costituisce l'unica sorgente dello stato e deve aggiornare in modo coerente tutti gli analizzatori interessati.
+
+Il valore selezionato deve essere salvato e ripristinato nello stato del plugin.
+
 ### RF-050 – Oscilloscopio
 
 Il plugin deve mostrare la forma d'onda temporale.
+
+### RF-050A - Zoom dell'oscilloscopio con rotella del mouse
+
+L'oscilloscopio della pagina Analysis deve supportare zoom in e zoom out della base temporale tramite la rotella del mouse. Lo zoom deve essere centrato, quando possibile, sulla posizione indicata dal puntatore e deve rispettare limiti minimi e massimi che mantengano la visualizzazione stabile e leggibile.
+
+Lo zoom e un'operazione esclusivamente grafica e non deve modificare, spostare o interrompere il segnale audio.
 
 ### RF-051 – LUFS
 
@@ -913,6 +931,12 @@ Il plugin deve mostrare un correlation meter da -1 a +1.
 ### RF-058 – Stereo Width
 
 Il plugin deve mostrare una misura normalizzata della larghezza stereo tra 0 e 1.
+
+### RF-058A - Visualizzatore stereo comparativo
+
+La pagina Compare deve includere, sotto l'analizzatore principale, un visualizzatore grafico del campo stereo di Mix e Reference. Le due sorgenti devono essere rappresentate simultaneamente e mantenere i rispettivi colori del tema.
+
+La sorgente selezionata nel controllo A/B deve essere mostrata con il contorno e un'area riempita opaca; la sorgente non selezionata deve essere mostrata soltanto tramite il contorno. Il cambio di selezione deve aggiornare la gerarchia visiva senza cancellare o interrompere l'analisi delle due sorgenti.
 
 ### RF-059 – Reset misurazioni
 
