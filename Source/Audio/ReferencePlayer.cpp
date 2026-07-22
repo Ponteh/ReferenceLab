@@ -4,12 +4,12 @@
 namespace referencelab {
 bool ReferencePlayer::load(const juce::File& file, juce::AudioFormatManager& formats, juce::String& error) {
     std::unique_ptr<juce::AudioFormatReader> reader(formats.createReaderFor(file));
-    if (!reader) { error = "Formato audio non supportato o file non valido"; return false; }
-    if (reader->lengthInSamples <= 0 || reader->lengthInSamples > std::numeric_limits<int>::max()) { error = "Durata file non supportata"; return false; }
+    if (!reader) { error = "Unsupported audio format or invalid file"; return false; }
+    if (reader->lengthInSamples <= 0 || reader->lengthInSamples > std::numeric_limits<int>::max()) { error = "Unsupported file duration"; return false; }
     auto next = std::make_shared<ReferenceAudioData>();
     next->sampleRate = reader->sampleRate;
     next->samples.setSize(2, static_cast<int>(reader->lengthInSamples));
-    if (!reader->read(&next->samples, 0, next->samples.getNumSamples(), 0, true, true)) { error = "Errore durante la decodifica"; return false; }
+    if (!reader->read(&next->samples, 0, next->samples.getNumSamples(), 0, true, true)) { error = "Audio decoding failed"; return false; }
     if (reader->numChannels == 1) next->samples.copyFrom(1, 0, next->samples, 0, 0, next->samples.getNumSamples());
     setAudio(std::move(next)); return true;
 }

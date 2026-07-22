@@ -250,6 +250,8 @@ Il layout deve privilegiare chiarezza, coerenza visiva e rapidità di utilizzo, 
 - EQ Bypass appartiene alla sezione Comparison Filters;
 - la pagina Details e sostituita dalla pagina Airwindows Meter; le impostazioni sono richiamate dall'icona a ingranaggio nella barra superiore;
 - componenti e pagine Reference usano arancione predefinito, quelli Mix azzurro predefinito e quelli neutrali bianco. Il bianco non deve essere disponibile tra i colori personalizzabili dall'utente.
+- il pannello Impostazioni deve usare sezioni ad altezza stabile con scorrimento verticale, senza comprimere o tagliare campi e pulsanti: controlli legati alla Reference nel colore Reference, controlli generici in bianco e selettore colore Mix nel colore Mix;
+- il pulsante Impostazioni deve apparire bianco con testo/icona scuri quando il pannello e aperto, e scuro con testo/icona bianchi quando e chiuso.
 
 ## 1.5 Fuori ambito
 
@@ -928,6 +930,10 @@ Titoli, scale e valori devono occupare una colonna distinta dall'area grafica, r
 
 Il bordo inferiore di ognuna delle tre fasce deve conservare una cronologia colorata della sorgente riprodotta: colore Mix per i segmenti Mix e colore Reference per i segmenti Reference. Ogni cambio Mix/Reference e ogni sostituzione della reference deve produrre una linea verticale confinata alle tre aree grafiche; segmenti e separatori restano visibili finché escono naturalmente dalla vista scorrevole. Il doppio clic cancella la sola cronologia visiva.
 
+Ogni fascia deve mostrare il proprio voto alfabetico Airwindows e la relativa barra colorata sia per Mix sia per Reference. I due calcoli sono indipendenti dal selettore di ascolto: Mix viene valutato continuamente e Reference viene valutata in parallelo quando e caricata e in riproduzione, anche se si sta ascoltando Mix. Il caricamento di una nuova Reference azzera il relativo calcolo. Il doppio clic azzera entrambi i gruppi di voti.
+
+La scala Peak della prima fascia deve estendersi da -36 dB a +3, includere esplicitamente lo zero e mostrare l'unita dB accanto al valore -36 anziche accanto a +3.
+
 Il renderer usa il tema scuro, le proporzioni e la gerarchia visiva di ReferenceLab; non incorpora componenti UI dello snapshot upstream.
 
 ## 7.9 Libreria reference
@@ -1404,6 +1410,8 @@ public:
 ---
 
 # 13. Specifica GUI
+
+Tutte le stringhe visibili nel plug-in devono essere in lingua inglese. Il vincolo include nomi delle pagine e delle sezioni, label, valori descrittivi, menu, tooltip, finestre di dialogo, stati dinamici, avvisi e messaggi di errore. Identificatori interni, nomi dei parametri e dati inseriti dall'utente non devono essere tradotti.
 
 ```text
 +--------------------------------------------------------------------------------+

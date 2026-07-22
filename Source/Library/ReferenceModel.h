@@ -40,7 +40,7 @@ struct ReferenceLibrary {
 };
 
 struct ReferencePlaylist {
-    juce::String id { juce::Uuid().toString() }, name { "Nuova playlist" };
+    juce::String id { juce::Uuid().toString() }, name { "New Playlist" };
     juce::StringArray referenceIds;
     int currentIndex = -1;
     bool add(const juce::String&); bool remove(const juce::String&);

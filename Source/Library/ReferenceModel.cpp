@@ -27,12 +27,12 @@ juce::var ReferenceMetadata::toVar() const {
 
 std::optional<ReferenceMetadata> ReferenceMetadata::fromVar(const juce::var& v, juce::String& error) {
     auto* o = v.getDynamicObject();
-    if (o == nullptr) { error = "Reference non valida"; return {}; }
+    if (o == nullptr) { error = "Invalid reference"; return {}; }
     ReferenceMetadata m;
     m.uuid = o->getProperty("uuid").toString(); m.provider = o->getProperty("provider").toString();
     m.title = o->getProperty("title").toString(); m.source = o->getProperty("src").toString();
     if (m.uuid.isEmpty() || m.provider.isEmpty() || m.title.isEmpty() || m.source.isEmpty()) {
-        error = "Campi obbligatori mancanti (uuid, provider, title, src)"; return {};
+        error = "Required fields are missing (uuid, provider, title, src)"; return {};
     }
     m.artist=o->getProperty("artist").toString(); m.album=o->getProperty("album").toString();
     m.genre=o->getProperty("genre").toString(); m.musicalKey=o->getProperty("key").toString();
@@ -59,5 +59,5 @@ bool ReferencePlaylist::move(const juce::String&value,int delta){auto from=refer
 juce::String ReferencePlaylist::current() const { return juce::isPositiveAndBelow(currentIndex,referenceIds.size())?referenceIds[currentIndex]:juce::String{}; }
 juce::String ReferencePlaylist::selectRelative(int delta) { if(referenceIds.isEmpty()){currentIndex=-1;return{};}currentIndex=(currentIndex+delta)%referenceIds.size();if(currentIndex<0)currentIndex+=referenceIds.size();return current(); }
 juce::var ReferencePlaylist::toVar() const { auto*o=new juce::DynamicObject();o->setProperty("id",id);o->setProperty("name",name);o->setProperty("currentIndex",currentIndex);juce::Array<juce::var>ids;for(auto&v:referenceIds)ids.add(v);o->setProperty("references",ids);return o; }
-std::optional<ReferencePlaylist> ReferencePlaylist::fromVar(const juce::var&v,juce::String&error){auto*o=v.getDynamicObject();if(!o){error="Playlist non valida";return{};}ReferencePlaylist p;p.id=o->getProperty("id").toString();p.name=o->getProperty("name").toString();if(p.id.isEmpty()||p.name.isEmpty()){error="ID e nome playlist sono obbligatori";return{};}if(auto*a=o->getProperty("references").getArray())for(auto&x:*a)if(x.toString().isNotEmpty()&&!p.referenceIds.contains(x.toString()))p.referenceIds.add(x.toString());p.currentIndex=p.referenceIds.isEmpty()?-1:juce::jlimit(0,p.referenceIds.size()-1,(int)o->getProperty("currentIndex"));return p;}
+std::optional<ReferencePlaylist> ReferencePlaylist::fromVar(const juce::var&v,juce::String&error){auto*o=v.getDynamicObject();if(!o){error="Invalid playlist";return{};}ReferencePlaylist p;p.id=o->getProperty("id").toString();p.name=o->getProperty("name").toString();if(p.id.isEmpty()||p.name.isEmpty()){error="Playlist ID and name are required";return{};}if(auto*a=o->getProperty("references").getArray())for(auto&x:*a)if(x.toString().isNotEmpty()&&!p.referenceIds.contains(x.toString()))p.referenceIds.add(x.toString());p.currentIndex=p.referenceIds.isEmpty()?-1:juce::jlimit(0,p.referenceIds.size()-1,(int)o->getProperty("currentIndex"));return p;}
 } // namespace referencelab

@@ -10,7 +10,7 @@ enum class ReferenceError { none,notFound,unsupportedFormat,decodeFailure,networ
 struct HttpDownloadOptions {
     juce::int64 maximumBytes = 64ll * 1024ll * 1024ll;
     int timeoutMs = 20000, redirects = 5, maximumAttempts = 2;
-    juce::String resourceName = "risorsa remota";
+    juce::String resourceName = "remote resource";
 };
 
 struct HttpDownloadResult {

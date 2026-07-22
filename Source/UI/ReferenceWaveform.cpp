@@ -12,7 +12,7 @@ void ReferenceWaveform::setLoop(bool enabled,double start,double end)noexcept{lo
 
 void ReferenceWaveform::paint(juce::Graphics&g){
     auto area=getLocalBounds().toFloat();g.setColour(juce::Colour(0xff111923));g.fillRoundedRectangle(area,5);
-    auto audio=player.getAudioSnapshot();if(!audio||audio->samples.getNumSamples()==0){g.setColour(juce::Colours::grey);g.drawText("Nessuna waveform",getLocalBounds(),juce::Justification::centred);return;}
+    auto audio=player.getAudioSnapshot();if(!audio||audio->samples.getNumSamples()==0){g.setColour(juce::Colours::grey);g.drawText("No waveform",getLocalBounds(),juce::Justification::centred);return;}
     auto d=duration();auto first=(int)(viewStart*audio->samples.getNumSamples());auto count=juce::jmax(1,(int)(viewLength*audio->samples.getNumSamples()));juce::Path path;auto centre=area.getCentreY();std::vector<float>peaks((size_t)juce::jmax(0,getWidth()));
     for(int x=0;x<getWidth();++x){auto a=juce::jlimit(0,audio->samples.getNumSamples()-1,first+(int)((double)x/juce::jmax(1,getWidth())*count));auto b=juce::jlimit(a+1,audio->samples.getNumSamples(),first+(int)((double)(x+1)/juce::jmax(1,getWidth())*count));auto step=juce::jmax(1,(b-a)/8);for(int i=a;i<b;i+=step)peaks[(size_t)x]=juce::jmax(peaks[(size_t)x],std::abs(audio->samples.getSample(0,i)),std::abs(audio->samples.getSample(1,i)));auto height=peaks[(size_t)x]*area.getHeight()*.42f;if(x==0)path.startNewSubPath(0,centre-height);else path.lineTo((float)x,centre-height);}
     for(int x=getWidth()-1;x>=0;--x)path.lineTo((float)x,centre+peaks[(size_t)x]*area.getHeight()*.42f);path.closeSubPath();g.setColour(referenceColour.withAlpha(.75f));g.fillPath(path);

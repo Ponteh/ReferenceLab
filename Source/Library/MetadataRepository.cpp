@@ -8,9 +8,9 @@ ReferenceLibrary MetadataRepository::load(juce::String& warning) const {
     if (!file.existsAsFile()) return lib;
     auto parsed = juce::JSON::parse(file);
     auto* root = parsed.getDynamicObject();
-    if (root == nullptr) { warning = "reference.json non valido; uso libreria vuota"; return lib; }
+    if (root == nullptr) { warning = "Invalid reference.json; using an empty library"; return lib; }
     lib.schemaVersion=(int)root->getProperty("schemaVersion");
-    if (lib.schemaVersion > 2) { warning = "Schema reference.json più recente di questa versione"; return lib; }
+    if (lib.schemaVersion > 2) { warning = "reference.json schema is newer than this version"; return lib; }
     lib.id=root->getProperty("libraryId").toString(); lib.name=root->getProperty("libraryName").toString();
     auto rootPath=root->getProperty("rootPath").toString(); if(rootPath.isNotEmpty()) lib.root=juce::File(rootPath);
     if(auto* refs=root->getProperty("references").getArray()) for(auto& v:*refs) { juce::String error; if(auto m=ReferenceMetadata::fromVar(v,error)) lib.references.push_back(std::move(*m)); else warning += error + "\n"; }
@@ -23,9 +23,9 @@ bool MetadataRepository::save(const ReferenceLibrary& lib, juce::String& error) 
     juce::Array<juce::var> refs; for(auto& r:lib.references) refs.add(r.toVar()); o->setProperty("references",refs);
     file.getParentDirectory().createDirectory();
     juce::TemporaryFile temp(file);
-    if(!temp.getFile().replaceWithText(juce::JSON::toString(juce::var(o),true))) { error="Impossibile scrivere il file temporaneo"; return false; }
+    if(!temp.getFile().replaceWithText(juce::JSON::toString(juce::var(o),true))) { error="Unable to write the temporary file"; return false; }
     if(file.existsAsFile()) file.copyFileTo(file.getSiblingFile("reference.json.bak"));
-    if(!temp.overwriteTargetFileWithTemporary()) { error="Impossibile sostituire reference.json"; return false; }
+    if(!temp.overwriteTargetFileWithTemporary()) { error="Unable to replace reference.json"; return false; }
     return true;
 }
 } // namespace referencelab
