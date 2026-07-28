@@ -1,0 +1,682 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[italian]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=24mm]{geometry}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+
+\definecolor{ReferenceOrange}{HTML}{FF9F43}
+\definecolor{MixBlue}{HTML}{59BFFF}
+\definecolor{DarkPanel}{HTML}{151D27}
+\definecolor{LinkBlue}{HTML}{2474A6}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=LinkBlue,
+  urlcolor=LinkBlue,
+  pdftitle={ReferenceLab 2.1 -- Manuale d'uso},
+  pdfauthor={ReferenceLab}
+}
+
+\setlist{nosep,leftmargin=6mm}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+\setcounter{tocdepth}{2}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{ReferenceLab 2.1}
+\rhead{Manuale d'uso}
+\cfoot{\thepage}
+
+\newcommand{\control}[1]{\textbf{\textsf{#1}}}
+\newcommand{\menuitem}[1]{\textsf{#1}}
+\newcommand{\mix}{\textcolor{MixBlue}{\textbf{Mix}}}
+\newcommand{\reference}{\textcolor{ReferenceOrange}{\textbf{Reference}}}
+\newcommand{\important}[1]{\fcolorbox{ReferenceOrange}{white}{\parbox{0.93\linewidth}{#1}}}
+
+\title{\vspace{-15mm}\textbf{ReferenceLab 2.1}\\[2mm]
+\Large Manuale completo di utilizzo}
+\author{Plugin VST3 e applicazione Standalone}
+\date{Luglio 2026}
+
+\begin{document}
+\maketitle
+
+\begin{center}
+\small Documento ricavato da ReferenceLab SRS 2.1, cronologia del progetto e
+comportamento implementato nel codice sorgente.
+\end{center}
+
+\tableofcontents
+\newpage
+
+\section{Introduzione}
+
+ReferenceLab è uno strumento di monitoraggio e confronto A/B per confrontare il
+segnale della DAW, chiamato \mix, con una traccia commerciale o tecnica,
+chiamata \reference. Il plugin riunisce riproduzione delle reference, loudness
+matching, filtri di confronto, analisi spettrale e dinamica, librerie, sorgenti
+web e correzione cuffie AutoEQ.
+
+La versione 2.1 è disponibile nei formati \textbf{VST3} e
+\textbf{Standalone}, opera in stereo e si rivolge principalmente a Windows
+10/11 x64. Nel formato VST3 va inserita sul bus sul quale si desidera effettuare
+il controllo, normalmente il master bus. Le funzioni del plugin sono pensate
+per il monitoraggio: la modalità \control{Safe Export}, attiva inizialmente,
+protegge il rendering offline dalle elaborazioni di confronto.
+
+\subsection{Concetti fondamentali}
+
+\begin{description}[style=nextline]
+  \item[\mix] Il segnale ricevuto in ingresso dalla DAW.
+  \item[\reference] Il file locale o remoto scelto come termine di paragone.
+  \item[A/B] Il passaggio tra Mix e Reference. Il comando è smussato dal tempo
+  \control{A/B Fade} per evitare click.
+  \item[Loudness matching] Compensazione del volume percepito. Serve a evitare
+  che il segnale più forte sembri automaticamente migliore.
+  \item[Processing di confronto] Filtri HP, banda parametrica, LP e modalità di
+  ascolto applicati in modo coerente al confronto.
+  \item[Correzione cuffie] EQ finale dedicato al sistema di ascolto. È distinto
+  dall'EQ di confronto e viene applicato soltanto se non è in bypass.
+\end{description}
+
+\important{\textbf{Attenzione al livello.} Prima di confrontare due sorgenti,
+attivare il loudness matching oppure regolare il guadagno manuale. Cambiamenti
+di livello possono essere scambiati facilmente per cambiamenti timbrici.}
+
+\section{Avvio rapido}
+
+\begin{enumerate}
+  \item Inserire ReferenceLab sul master della DAW oppure avviare la versione
+  Standalone.
+  \item Aprire \control{FILE} e scegliere \menuitem{Add Audio File...}; in
+  alternativa trascinare/aggiungere una sorgente web con
+  \menuitem{Add Web Source...}.
+  \item Selezionare una reference dalla libreria. La traccia viene caricata e
+  avviata.
+  \item Usare i pulsanti \control{MIX} e \control{REFERENCE}, oppure il tasto
+  \control{B}, per alternare le sorgenti.
+  \item Nella pagina \control{Compare}, togliere il bypass del loudness match,
+  scegliere il detector e attivare \control{Auto Match}.
+  \item Usare \control{Analysis} per verificare spettro, scope, LUFS, picchi,
+  dinamica e immagine stereo.
+  \item Lasciare \control{Safe Export} attivo se ReferenceLab rimane sul master
+  durante l'esportazione offline.
+\end{enumerate}
+
+\section{Interfaccia generale}
+
+\subsection{Barra superiore}
+
+La barra superiore contiene:
+
+\begin{longtable}{p{0.24\linewidth}p{0.70\linewidth}}
+\toprule
+\textbf{Controllo} & \textbf{Funzione}\\
+\midrule
+\endhead
+\control{LIBRARY} & Apre o chiude la libreria laterale. Il contrasto
+chiaro/scuro indica lo stato.\\
+\control{FILE} & Aggiunta, scansione, sorgenti web, cataloghi JSON,
+ricollegamento e rimozione delle reference.\\
+\control{CATALOG} & Gestione di librerie, playlist, metadati e preset di
+confronto.\\
+\control{MIX}/\control{REFERENCE} & Seleziona la sorgente ascoltata. Il simbolo
+``\textgreater'' e il colore mostrano la sorgente attiva.\\
+\control{B} & Scorciatoia da tastiera per alternare Mix e Reference.\\
+\control{\(\leftarrow\)}/\control{\(\rightarrow\)} & Carica la reference
+precedente o successiva nell'elenco filtrato.\\
+\control{Ingranaggio} & Apre o chiude le impostazioni. Quando è aperto il
+pulsante diventa chiaro con simbolo scuro.\\
+\bottomrule
+\end{longtable}
+
+La riga di stato indica la sorgente ascoltata, riproduzione, pausa, caricamento
+web, decodifica, errori e sincronizzazione DAW. La riga host mostra, quando
+forniti dalla DAW, play/stop, BPM, metrica e posizione in secondi.
+
+\subsection{Pagine}
+
+Le cinque pagine principali sono:
+
+\begin{itemize}
+  \item \control{Reference}: player, waveform, loop e sincronizzazione;
+  \item \control{Analysis}: spettro, oscilloscopio e misure tecniche;
+  \item \control{Compare}: loudness matching, EQ di confronto e campo stereo;
+  \item \control{Meter}: storico Airwindows di loudness, transienti e densità;
+  \item \control{Headphones}: ricerca AutoEQ e correzione cuffie.
+\end{itemize}
+
+\section{Libreria delle reference}
+
+\subsection{Apertura, dimensione e selezione}
+
+La libreria è un pannello laterale richiamato con \control{LIBRARY}. Il
+separatore verticale permette di modificarne la larghezza; un doppio clic sul
+separatore ripristina la proporzione predefinita. La larghezza e lo stato
+aperto/chiuso vengono memorizzati.
+
+Selezionando una riga si carica la reference, si aggiornano waveform e metadati
+e si rende la traccia disponibile per il confronto. Le frecce della barra
+superiore navigano nell'elenco attualmente visibile.
+
+\subsection{Ricerca, filtri e ordinamento}
+
+La ricerca considera titolo, artista, album, genere e tag. Sono disponibili
+anche filtri dedicati per artista, genere, tonalità, BPM minimo/massimo,
+preferiti e valutazione minima.
+
+L'ordinamento può usare titolo, artista, album, genere, anno, BPM, rating, data
+di aggiunta o ultimo utilizzo. Il comando discendente inverte l'ordine.
+Ricerca, filtro e ordinamento cambiano la vista: non eliminano file né
+metadati.
+
+\subsection{Menu FILE}
+
+\begin{description}[style=nextline]
+  \item[\menuitem{Add Audio File...}] Aggiunge un singolo file audio locale.
+  Il progetto usa i decoder registrati da JUCE; i formati effettivamente
+  disponibili dipendono dalla build e dalla piattaforma.
+  \item[\menuitem{Scan Folder...}] Analizza una cartella e aggiunge i file
+  audio rilevati. L'opzione \control{Recursive Scan} include le sottocartelle.
+  \item[\menuitem{Add Web Source...}] Accetta un URL HTTP/HTTPS audio. Il
+  contenuto viene scaricato e decodificato in memoria; lo stato mostra
+  percentuale, decodifica o errore.
+  \item[\menuitem{Import JSON Catalog...}] Importa un catalogo JSON locale.
+  \item[\menuitem{Relink Reference...}] Associa di nuovo una voce a un file
+  locale spostato o rinominato, conservandone i metadati.
+  \item[\menuitem{Remove Reference}] Rimuove la voce selezionata dalla libreria.
+  Non va usato come comando di cancellazione del file audio originale.
+\end{description}
+
+\subsection{Librerie e playlist}
+
+\control{New Library...} crea una libreria associata a una cartella scelta
+dall'utente. Il selettore libreria passa da un database all'altro.
+\control{New Playlist...} crea una raccolta logica; \control{Add Selection to
+Playlist} vi aggiunge la reference selezionata. Le playlist non duplicano i
+file audio.
+
+\subsection{Metadati}
+
+Nel pannello impostazioni si possono modificare:
+
+\begin{itemize}
+  \item titolo, artista, album e genere;
+  \item anno, BPM e tonalità;
+  \item rating da 0 a 5 e stato preferito;
+  \item tag separati da virgola e note libere;
+  \item offset iniziale e punti del loop, tramite la pagina Reference.
+\end{itemize}
+
+\control{Save Metadata} salva le modifiche nel database della libreria. È
+consigliabile salvare prima di cambiare reference quando sono stati modificati
+campi testuali o marker.
+
+\section{Pagina Reference}
+
+\subsection{Waveform}
+
+La waveform rappresenta l'intera reference e visualizza posizione corrente,
+inizio e fine del loop. La regione del loop è evidenziata.
+
+\begin{itemize}
+  \item Clic o trascinamento in un'area libera: seek.
+  \item Trascinamento dei marker: modifica Loop A o Loop B.
+  \item Trascinamento per panoramica nella vista ingrandita: sposta la finestra
+  temporale.
+  \item Rotella del mouse: zoom orizzontale, centrato sulla posizione del
+  puntatore.
+  \item \control{Full View}: ripristina la visualizzazione dell'intero file.
+\end{itemize}
+
+\subsection{Transport}
+
+\control{Play} avvia la reference; \control{Pause} conserva la posizione;
+\control{Stop} interrompe e riporta il player alla posizione iniziale prevista.
+\control{Position} permette il seek numerico/lineare.
+
+\subsection{Offset e loop}
+
+\control{Start Offset} stabilisce il punto iniziale della reference.
+\control{Loop} abilita la ripetizione tra \control{Loop A} e \control{Loop B}.
+\control{Full Loop} estende l'intervallo alla durata disponibile. I valori
+possono essere regolati con i controlli oppure trascinando i marker.
+
+\subsection{Sincronizzazione DAW}
+
+\control{Transport Sync} collega il comportamento del player al transport host.
+Sono disponibili:
+
+\begin{description}[style=nextline]
+  \item[\control{Timeline}] La posizione della reference segue la timeline
+  comunicata dalla DAW, tenendo conto dell'offset.
+  \item[\control{Restart on Play}] La reference riparte quando il transport
+  passa allo stato play.
+  \item[\control{Sync Offset}] Anticipa o ritarda la relazione con la DAW, in
+  secondi, nell'intervallo da -600 a +600.
+\end{description}
+
+Se l'host non comunica una posizione valida, l'interfaccia mostra
+\control{SYNC N/A}; in questo caso usare la modalità libera.
+
+\section{Confronto A/B e routing}
+
+Il passaggio \control{MIX}/\control{REFERENCE} avviene con crossfade.
+\control{A/B Fade} imposta la durata fra 0 e 100 ms. Valori brevi rendono il
+confronto immediato; valori più lunghi riducono maggiormente click e discontinuità.
+
+La Reference deve essere caricata perché il relativo pulsante produca audio.
+Lo stato \control{REF | NOT LOADED} segnala che non è disponibile.
+
+\section{Pagina Analysis}
+
+\subsection{Spettro in tempo reale}
+
+Lo spettro mostra Mix e Reference con colori coerenti in tutta l'interfaccia.
+La sorgente ascoltata ha anche un'area riempita, l'altra conserva la sagoma.
+L'asse delle frequenze è logaritmico da circa 20 Hz a 20 kHz; l'asse verticale
+è espresso in dB.
+
+\control{Listen Mode} determina sia ciò che si ascolta sia il contenuto mostrato
+nello spettro principale:
+
+\begin{description}[style=nextline]
+  \item[\control{Stereo}] Normale ascolto stereo; una curva per sorgente.
+  \item[\control{Mono}] Somma coerente dei canali per controllare compatibilità
+  mono e cancellazioni.
+  \item[\control{Mid}] Componente comune \(M=(L+R)/2\).
+  \item[\control{Side}] Componente differenziale \(S=(L-R)/2\), utile per
+  riverberi, ampiezza e contenuto esclusivamente laterale.
+\end{description}
+
+\control{Swap L/R} scambia canale sinistro e destro per entrambe le sorgenti.
+Il risultato è rappresentato dallo scope e dai meter Output; non cambia gli
+spettri comparativi Mid/Side della pagina Compare.
+
+\subsection{FFT Size, Refresh, Smoothing e Slope}
+
+\begin{description}[style=nextline]
+  \item[\control{FFT Size}] Da 1024 a 32768 campioni. Una FFT grande migliora
+  la risoluzione alle basse frequenze ma reagisce più lentamente; una piccola
+  è più rapida sui transienti.
+  \item[\control{Refresh}] Aggiornamento grafico a 15, 30 o 60 Hz. Non modifica
+  l'audio.
+  \item[\control{Smoothing}] Stabilizza visivamente lo spettro. Valori maggiori
+  producono una lettura più lenta e uniforme.
+  \item[\control{Slope}] Compensazione esclusivamente visiva da 0,0 a
+  4,5 dB/ottava, predefinita a 4,5. Non equalizza il segnale e non modifica i
+  dati FFT originali.
+\end{description}
+
+\control{Freeze} congela la rappresentazione per effettuare una lettura;
+modificare Slope continua comunque ad aggiornare il modo in cui i dati
+congelati vengono disegnati. \control{Reset Meters} azzera le misure accumulate.
+
+\subsection{Oscilloscopio Output}
+
+Lo scope mostra il segnale effettivamente instradato dopo modalità di ascolto.
+La rotella effettua zoom orizzontale attorno al puntatore. È possibile
+allargare la finestra anche sotto il 100\%, per osservare un intervallo più
+lungo, oppure superare il 100\% per analizzare il dettaglio. Il trascinamento
+nella vista ingrandita sposta la finestra temporale.
+
+\subsection{Meter tecnici}
+
+\begin{longtable}{p{0.27\linewidth}p{0.67\linewidth}}
+\toprule
+\textbf{Misura} & \textbf{Interpretazione}\\
+\midrule
+\endhead
+Momentary LUFS & Loudness su finestra molto breve; reagisce rapidamente.\\
+Short-Term LUFS & Loudness su alcuni secondi; utile per sezioni musicali.\\
+Integrated LUFS & Media gated accumulata; va azzerata quando inizia una nuova
+misurazione.\\
+Peak & Picco campione rilevato.\\
+True Peak & Stima dei picchi tra campioni, utile per valutare margine e
+conversioni.\\
+RMS & Energia media del segnale.\\
+Crest Factor & Differenza tra picco e livello medio; indica il rapporto fra
+transienti e corpo.\\
+Dynamic Range & Stima dell'escursione dinamica.\\
+Correlation & Relazione di fase L/R: valori positivi sono più compatibili mono,
+valori negativi richiedono attenzione.\\
+Stereo Width & Stima normalizzata della larghezza stereo.\\
+\bottomrule
+\end{longtable}
+
+\section{Pagina Compare}
+
+\subsection{Loudness Match}
+
+\control{Match Bypass} esclude l'intera compensazione. Con bypass disattivato:
+
+\begin{itemize}
+  \item \control{Auto Match} calcola la differenza fra Mix e Reference;
+  \item \control{Detector} sceglie Integrated, Short-Term o Momentary;
+  \item \control{Target LUFS} stabilisce il riferimento operativo, da -36 a
+  -6 LUFS;
+  \item \control{Manual Gain} aggiunge una correzione manuale da -12 a
+  +12 dB;
+  \item \control{Applied} mostra il guadagno corrente applicato.
+\end{itemize}
+
+La compensazione automatica è limitata per evitare guadagni estremi ed è
+smussata nel tempo. Integrated è più stabile per confronti lunghi; Short-Term
+è adatto alle sezioni; Momentary è rapido ma può muoversi di più.
+
+\subsection{Spettri post-EQ}
+
+Il grafico mostra gli spettri post-EQ Mid e Side di Mix e Reference. I pulsanti
+\control{MID} e \control{SIDE} abilitano i livelli indipendentemente dalla
+modalità Listen della pagina Analysis. Disattivandoli entrambi non viene
+mostrato alcuno spettro.
+
+La sorgente selezionata è riempita, quella non selezionata resta come contorno;
+il Side è reso più trasparente del Mid. La curva bianca mostra la risposta
+complessiva dei filtri di confronto quando l'EQ non è in bypass.
+
+\subsection{Campo stereo comparativo}
+
+Il visualizzatore inferiore rappresenta contemporaneamente il campo stereo di
+Mix e Reference. L'asse orizzontale evidenzia la componente laterale, quello
+verticale la componente Mid. Il riempimento identifica la sorgente ascoltata.
+Il grafico è diagnostico e non modifica l'audio.
+
+\subsection{Comparison Filters}
+
+\control{EQ Bypass} esclude in blocco i filtri seguenti:
+
+\begin{description}[style=nextline]
+  \item[\control{HP Enabled / High Pass}] Passa-alto da 20 a 2000 Hz con
+  pendenza 12 o 24 dB/ottava.
+  \item[\control{Band Enabled / Band Freq / Gain / Q}] Banda parametrica da
+  20 Hz a 20 kHz, guadagno da -18 a +18 dB e Q da 0,1 a 12. Un Q alto
+  seleziona una zona stretta; un Q basso una zona ampia.
+  \item[\control{LP Enabled / Low Pass}] Passa-basso da 100 Hz a 20 kHz con
+  pendenza 12 o 24 dB/ottava.
+\end{description}
+
+I filtri vengono applicati in modo equivalente a Mix e Reference: servono a
+confrontare una regione dello spettro, non a ``migliorare'' una sola sorgente.
+
+\section{Pagina Meter}
+
+Il meter ispirato ad Airwindows Meter registra una timeline separata per Mix e
+Reference. Le tre corsie sono:
+
+\begin{description}[style=nextline]
+  \item[Loudness / Peak] Mostra livello medio e picchi per L/R.
+  \item[Detail / Slew] Evidenzia velocità dei cambiamenti e contenuto
+  transiente.
+  \item[Fullness / Zero Cross] Usa lo zero crossing come indicazione della
+  distribuzione verso basse o alte frequenze.
+\end{description}
+
+I riquadri MIX e REF producono valutazioni cumulative per le tre corsie. Sono
+indicatori comparativi, non standard normativi di loudness. Il colore dei punti
+comunica l'attività relativa di picco e slew; i colori viola/turchese
+distinguono i canali nella corsia zero crossing. Le linee verticali bianche
+segnano i cambi sorgente.
+
+Un doppio clic sul meter cancella storico e punteggi. Per un confronto utile,
+ascoltare porzioni di durata simile e azzerare prima di una nuova sessione.
+
+\section{Pagina Headphones e AutoEQ}
+
+\subsection{Scopo e posizione nella catena}
+
+La correzione cuffie è un EQ finale di monitoraggio. È separata dai filtri
+Compare: questi ultimi isolano frequenze su entrambe le sorgenti, mentre
+Headphones compensa il modello di cuffia usato per ascoltare l'uscita finale.
+
+\important{\textbf{Un solo profilo alla volta.} I profili salvati non vengono
+sommati. Il doppio clic carica un singolo profilo attivo, indicato dal simbolo
+``\textgreater''. \control{BYPASS ON} significa che nessuna correzione cuffie
+viene applicata.}
+
+\subsection{Ricerca online}
+
+La sezione \control{AUTOEQ SEARCH} è compatta per impostazione predefinita.
+Aprirla, digitare almeno due caratteri del modello e premere
+\control{SEARCH AUTOEQ}. La ricerca richiede Internet.
+
+I risultati indicano modello, sorgente della misura e rig quando disponibili.
+Selezionare la misura desiderata. Il campo nome è opzionale: se rimane vuoto,
+il profilo viene salvato con il nome originale della cuffia. Premere
+\control{SAVE ONLINE PROFILE} per richiedere/generare l'EQ, salvarlo localmente
+e caricarlo.
+
+Dopo il salvataggio il profilo è utilizzabile offline: non è necessario
+interrogare nuovamente il servizio finché non si vuole cercare una nuova
+cuffia.
+
+\subsection{Profili locali}
+
+\control{PROFILES} apre o chiude la barra laterale. Un clic seleziona il profilo
+per visualizzarlo e modificarlo; un \textbf{doppio clic} lo carica nel DSP. Il
+simbolo ``\textgreater'' identifica quello realmente attivo.
+
+\control{SAVE CHANGES} salva nome, safety preamp e bande modificate. Se il
+profilo modificato è attivo, il DSP viene aggiornato. \control{DELETE PROFILE}
+elimina il profilo locale; se era attivo, la correzione viene rimossa.
+
+\subsection{Bypass}
+
+Il bypass è attivo inizialmente:
+
+\begin{itemize}
+  \item \control{BYPASS ON}: correzione disabilitata;
+  \item \control{BYPASS OFF}: profilo attivo applicato all'audio.
+\end{itemize}
+
+Prima di togliere il bypass abbassare il volume: alcuni profili modificano
+significativamente l'equilibrio tonale, anche se il preamp negativo fornisce
+margine.
+
+\subsection{Safety Preamp e bande}
+
+\control{EQ BANDS} espande o compatta l'editor. \control{Safety Preamp}, da
+-40 a 0 dB, precede i filtri e riduce il rischio di clipping dovuto ai boost.
+
+Ogni banda contiene:
+
+\begin{itemize}
+  \item tipo \control{Peaking}, \control{Low Shelf} o \control{High Shelf};
+  \item frequenza da 10 a 40000 Hz;
+  \item gain da -30 a +30 dB;
+  \item Q da 0,05 a 30.
+\end{itemize}
+
+Il grafico bianco mostra la risposta totale, preamp incluso, e si aggiorna
+mentre si muovono i controlli. Le modifiche diventano permanenti solo dopo
+\control{SAVE CHANGES}.
+
+Safety Preamp e bande si trovano nella stessa area scorrevole. Per evitare che
+la regolazione dei knob sposti il pannello, lo scorrimento si effettua
+trascinando esclusivamente la barra laterale.
+
+\subsection{Profili simili e cambio profilo}
+
+Due risultati con lo stesso modello possono provenire da sorgenti, rig o target
+diversi e quindi non essere equivalenti. Confrontare sempre preamp e valori
+delle bande, non soltanto il nome. Il caricamento ricrea lo stato dei filtri:
+anche fra configurazioni identiche può essere percepito un breve transiente nel
+momento del cambio; non significa che i profili vengano concatenati.
+
+\section{Impostazioni}
+
+\subsection{Cache}
+
+Il limite della cache RAM può essere 128, 256, 512 o 1024 MB. La cache contiene
+audio locale decodificato per rendere più rapidi i cambi. \control{Clear Cache}
+libera la RAM senza interrompere la reference già in riproduzione. La cache non
+è la libreria e cancellarla non rimuove file o metadati.
+
+\subsection{Aspetto}
+
+I colori Mix e Reference possono essere scelti fra blu, arancione, verde,
+viola, giallo e rosso. Il bianco è riservato ai controlli neutrali, alla curva
+EQ e ai visualizzatori generali. Colore, etichette, riempimento e contorni
+lavorano insieme affinché la sorgente non sia identificata soltanto dal colore.
+
+\subsection{Preset e stato}
+
+\control{Save Comparison Preset...} crea un file \texttt{.rlpreset} con i
+parametri di confronto. \control{Load Comparison Preset...} li ripristina.
+Questi preset non incorporano il file audio della reference né sostituiscono
+la libreria.
+
+Lo stato del plugin salvato dalla DAW comprende parametri, sorgente attiva,
+posizione e profilo cuffie attivo. I profili cuffie e il database delle
+reference sono inoltre conservati localmente dall'applicazione.
+
+\subsection{Safe Export}
+
+\control{Safe Export} è attivo per impostazione predefinita. Quando l'host
+segnala processing non real-time, ReferenceLab non processa il blocco: in
+questo modo una reference o una modalità di monitoraggio non finisce
+accidentalmente nel bounce. Il comportamento dipende dalla corretta
+segnalazione offline della DAW; per sicurezza è comunque buona pratica
+disabilitare o rimuovere dal percorso di render i plugin esclusivamente di
+monitoraggio.
+
+\section{Workflow consigliati}
+
+\subsection{Confronto timbrico affidabile}
+
+\begin{enumerate}
+  \item Caricare una reference dello stesso genere e con caratteristiche
+  pertinenti.
+  \item Scegliere una sezione confrontabile e impostare il loop.
+  \item Attivare Auto Match con detector Short-Term o Integrated.
+  \item Alternare con \control{B}, senza guardare inizialmente i grafici.
+  \item Usare HP/LP per confrontare separatamente basse, medie e alte.
+  \item Consultare gli spettri solo per confermare ciò che si sente.
+\end{enumerate}
+
+\subsection{Controllo mono e fase}
+
+\begin{enumerate}
+  \item In Analysis scegliere \control{Mono}.
+  \item Controllare variazioni di voce, basso e strumenti centrali.
+  \item Osservare Correlation: valori persistentemente negativi suggeriscono
+  possibili cancellazioni.
+  \item Passare a \control{Side} per individuare elementi eccessivamente
+  laterali.
+  \item Usare il campo stereo Compare per rapportare Mix e Reference.
+\end{enumerate}
+
+\subsection{Sessione in cuffia}
+
+\begin{enumerate}
+  \item Cercare e salvare il profilo appropriato mentre si è online.
+  \item Verificare sorgente, rig e target del risultato.
+  \item Fare doppio clic sul profilo e controllare il simbolo ``\textgreater''.
+  \item Abbassare il monitor level e passare da \control{BYPASS ON} a
+  \control{BYPASS OFF}.
+  \item Non compensare nuovamente lo stesso profilo con EQ esterni.
+  \item Prima dell'export verificare Safe Export e il routing di monitoraggio.
+\end{enumerate}
+
+\section{Risoluzione dei problemi}
+
+\begin{longtable}{p{0.31\linewidth}p{0.63\linewidth}}
+\toprule
+\textbf{Problema} & \textbf{Controlli consigliati}\\
+\midrule
+\endhead
+La Reference non si sente & Verificare che sia caricata, che il player sia in
+Play e che lo stato non mostri NOT LOADED, WEB ERROR o DECODING.\\
+SYNC N/A & La DAW non fornisce una posizione utilizzabile; disattivare
+Transport Sync o controllare le impostazioni transport dell'host.\\
+Il confronto sembra molto diverso & Controllare Match Bypass, Auto Match,
+Manual Gain, EQ Bypass, Listen Mode e correzione cuffie. Il livello è spesso la
+prima causa.\\
+Nessuno spettro in Compare & Riattivare almeno uno fra MID e SIDE.\\
+Lo spettro sembra inclinato & Regolare Slope; è una compensazione grafica e non
+un EQ.\\
+Lo scope è troppo fitto o troppo vuoto & Usare la rotella sopra lo scope; sono
+disponibili viste inferiori e superiori al 100\%.\\
+La ricerca AutoEQ non risponde & Verificare Internet, usare almeno due
+caratteri e riprovare. I profili già salvati restano disponibili offline.\\
+Il profilo cuffie non cambia & Il clic singolo mostra soltanto il profilo:
+effettuare doppio clic e verificare il simbolo ``\textgreater''. Controllare
+anche che BYPASS sia OFF.\\
+Due profili omonimi suonano diversi & Controllare source, rig, target, preamp e
+tutte le bande: il nome del modello non garantisce parametri identici.\\
+I knob cuffie spostano la vista & Usare la barra laterale per lo scroll; il
+trascinamento sul knob deve modificare esclusivamente il valore.\\
+Il bounce contiene processing indesiderato & Attivare Safe Export e verificare
+che la DAW segnali il render offline; in caso contrario bypassare ReferenceLab
+prima dell'esportazione.\\
+\bottomrule
+\end{longtable}
+
+\section{Persistenza, rete e dati}
+
+Le reference locali rimangono nei percorsi originali; ReferenceLab conserva
+catalogo e metadati. Le sorgenti web vengono scaricate con limiti di dimensione
+e decodificate senza eseguire rete sul thread audio. Cataloghi e URL devono
+usare HTTP/HTTPS validi.
+
+I profili cuffie AutoEQ sono salvati nel database locale
+\texttt{ReferenceLab/headphones.json} della cartella dati applicazione
+dell'utente. Ogni profilo contiene identificativo, nome, modello, sorgente,
+forma, rig, target, preamp e fino a 16 filtri. È possibile utilizzarli senza
+connessione, modificarli o eliminarli dall'interfaccia.
+
+La disponibilità e i contenuti del servizio AutoEQ dipendono dal servizio
+online e dalle rispettive misurazioni. ReferenceLab non sostituisce una
+calibrazione individuale della singola unità di cuffie.
+
+\section{Riferimento rapido dei parametri audio}
+
+\begin{longtable}{p{0.28\linewidth}p{0.22\linewidth}p{0.43\linewidth}}
+\toprule
+\textbf{Parametro} & \textbf{Intervallo/scelte} & \textbf{Effetto}\\
+\midrule
+\endhead
+A/B Fade & 0--100 ms & Crossfade fra Mix e Reference.\\
+Target LUFS & -36-- -6 LUFS & Obiettivo del loudness matcher.\\
+Manual Gain & -12--+12 dB & Correzione aggiuntiva del match.\\
+HPF & 20--2000 Hz & Passa-alto comparativo.\\
+HPF Slope & 12/24 dB/ott. & Pendenza passa-alto.\\
+Bell Frequency & 20--20000 Hz & Centro della banda parametrica.\\
+Bell Gain & -18--+18 dB & Boost/cut della banda.\\
+Bell Q & 0,1--12 & Larghezza della banda.\\
+LPF & 100--20000 Hz & Passa-basso comparativo.\\
+LPF Slope & 12/24 dB/ott. & Pendenza passa-basso.\\
+Sync Offset & -600--+600 s & Scostamento dalla timeline DAW.\\
+FFT Size & 1024--32768 & Risoluzione/reattività grafica.\\
+FFT Slope & 0--4,5 dB/ott. & Compensazione soltanto visiva.\\
+Headphone Preamp & -40--0 dB & Margine prima dell'EQ cuffie.\\
+Headphone Frequency & 10--40000 Hz & Frequenza della banda cuffie.\\
+Headphone Gain & -30--+30 dB & Guadagno della banda cuffie.\\
+Headphone Q & 0,05--30 & Larghezza/risonanza della banda cuffie.\\
+\bottomrule
+\end{longtable}
+
+\section{Note finali}
+
+ReferenceLab è uno strumento di decisione: grafici e voti aiutano a trovare
+differenze, ma non definiscono da soli la qualità di un mix. Per ottenere
+confronti ripetibili usare porzioni equivalenti, livelli compensati, un sistema
+di ascolto noto e una sola correzione cuffie attiva.
+
+\vfill
+\begin{center}
+\small ReferenceLab 2.1 --- Manuale d'uso --- Revisione iniziale, luglio 2026
+\end{center}
+
+\end{document}
