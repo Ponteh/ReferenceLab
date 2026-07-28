@@ -4,6 +4,7 @@
 #include "Audio/ComparisonProcessor.h"
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
+#include "Audio/LoudnessMatcher.h"
 #include "Audio/SampleFifo.h"
 #include "Audio/SpectrumAnalyzer.h"
 #include "Audio/TransportController.h"
@@ -68,6 +69,16 @@ public:
 
         beginTest("Swap L/R is identical and smoothed for Mix and Reference");
         referencelab::ComparisonProcessor swapProcessor;swapProcessor.prepare(48000.0,600);referencelab::ComparisonSettings swapSettings;swapSettings.swapLeftRight=true;swapProcessor.update(swapSettings);juce::AudioBuffer<float>swapMix(2,600),swapReference(2,600);for(int i=0;i<600;++i){swapMix.setSample(0,i,.8f);swapMix.setSample(1,i,-.2f);swapReference.setSample(0,i,.4f);swapReference.setSample(1,i,-.6f);}swapProcessor.process(swapMix,swapReference);expectWithinAbsoluteError(swapMix.getSample(0,599),-.2f,.001f);expectWithinAbsoluteError(swapMix.getSample(1,599),.8f,.001f);expectWithinAbsoluteError(swapReference.getSample(0,599),-.6f,.001f);expectWithinAbsoluteError(swapReference.getSample(1,599),.4f,.001f);
+
+        beginTest("Auto Match drives Mix and Reference independently to a common LUFS target");
+        referencelab::LoudnessMatcher loudnessMatcher;loudnessMatcher.prepare(1000.0);
+        referencelab::MeterSnapshot quietMix,loudReference;quietMix.integratedLufs=-20.f;loudReference.integratedLufs=-10.f;
+        juce::AudioBuffer<float>matchedMix(2,1000),matchedReference(2,1000);
+        for(int channel=0;channel<2;++channel)for(int sample=0;sample<1000;++sample){matchedMix.setSample(channel,sample,.25f);matchedReference.setSample(channel,sample,.25f);}
+        loudnessMatcher.process(matchedMix,matchedReference,quietMix,loudReference,true,referencelab::LoudnessMode::integrated,-14.f,0.f,12.f);
+        expectWithinAbsoluteError(loudnessMatcher.getMixGainDb(),6.f,.05f);
+        expectWithinAbsoluteError(loudnessMatcher.getReferenceGainDb(),-4.f,.05f);
+        expect(matchedMix.getSample(0,999)>matchedReference.getSample(0,999));
 
         beginTest("Listen mode is isolated from the Compare signal");
         referencelab::ComparisonProcessor monitorProcessor;monitorProcessor.prepare(48000.0,600);referencelab::ComparisonSettings monitorSettings;monitorSettings.bypass=true;monitorSettings.mode=referencelab::ListeningMode::side;monitorProcessor.update(monitorSettings);juce::AudioBuffer<float>compareMix(2,600),compareReference(2,600);for(int i=0;i<600;++i){compareMix.setSample(0,i,.8f);compareMix.setSample(1,i,.2f);compareReference.setSample(0,i,.4f);compareReference.setSample(1,i,.1f);}monitorProcessor.processEqualizer(compareMix,compareReference);expectWithinAbsoluteError(compareMix.getSample(0,599),.8f,.0001f);expectWithinAbsoluteError(compareMix.getSample(1,599),.2f,.0001f);monitorProcessor.processListeningMode(compareMix);expectWithinAbsoluteError(compareMix.getSample(0,599),.3f,.001f);expectWithinAbsoluteError(compareMix.getSample(1,599),-.3f,.001f);

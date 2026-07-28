@@ -3,13 +3,22 @@
 #include "UiTheme.h"
 
 namespace referencelab {
-EqCurveDisplay::EqCurveDisplay(SampleFifo&mixMid,SampleFifo&referenceMid,SampleFifo&mixSide,SampleFifo&referenceSide,juce::AudioProcessorValueTreeState&parameters)
-    :mixMidFifo(mixMid),referenceMidFifo(referenceMid),mixSideFifo(mixSide),referenceSideFifo(referenceSide),state(parameters) {
+EqCurveDisplay::EqCurveDisplay(SampleFifo&mixMid,SampleFifo&referenceMid,SampleFifo&mixSide,SampleFifo&referenceSide,
+                               SampleFifo&mixLeftIn,SampleFifo&mixRightIn,SampleFifo&referenceLeftIn,SampleFifo&referenceRightIn,
+                               juce::AudioProcessorValueTreeState&parameters)
+    :mixMidFifo(mixMid),referenceMidFifo(referenceMid),mixSideFifo(mixSide),referenceSideFifo(referenceSide),
+     mixLeftFifo(mixLeftIn),mixRightFifo(mixRightIn),referenceLeftFifo(referenceLeftIn),referenceRightFifo(referenceRightIn),state(parameters) {
     startTimerHz(30);
 }
 
+void EqCurveDisplay::consume(SampleFifo&fifo,std::array<float,fieldSize>&target){
+    const auto count=fifo.pull(scratch.data(),fieldSize);if(count<=0)return;
+    if(count>=fieldSize)std::copy_n(scratch.end()-fieldSize,fieldSize,target.begin());
+    else{std::move(target.begin()+count,target.end(),target.begin());std::copy_n(scratch.begin(),count,target.end()-count);}
+}
 void EqCurveDisplay::timerCallback() {
     mixMidAnalyzer.update(mixMidFifo);referenceMidAnalyzer.update(referenceMidFifo);mixSideAnalyzer.update(mixSideFifo);referenceSideAnalyzer.update(referenceSideFifo);
+    consume(mixLeftFifo,mixLeft);consume(mixRightFifo,mixRight);consume(referenceLeftFifo,referenceLeft);consume(referenceRightFifo,referenceRight);
     repaint();
 }
 
@@ -17,6 +26,15 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
     auto area = getLocalBounds().toFloat();
     g.setColour(juce::Colour(0xff151d27));
     g.fillRoundedRectangle(area, 6.0f);
+    auto stereoArea=area.removeFromBottom(area.getHeight()*.32f).reduced(8.f);
+    g.setColour(juce::Colours::white.withAlpha(.08f));g.drawLine(stereoArea.getCentreX(),stereoArea.getY(),stereoArea.getCentreX(),stereoArea.getBottom());g.drawLine(stereoArea.getX(),stereoArea.getCentreY(),stereoArea.getRight(),stereoArea.getCentreY());
+    auto fieldPath=[&](const std::array<float,fieldSize>&left,const std::array<float,fieldSize>&right){
+        juce::Path path;for(int i=0;i<fieldSize;++i){const auto side=juce::jlimit(-1.f,1.f,(left[(size_t)i]-right[(size_t)i])*.5f);const auto mid=juce::jlimit(-1.f,1.f,(left[(size_t)i]+right[(size_t)i])*.5f);const auto point=juce::Point<float>{stereoArea.getCentreX()+side*stereoArea.getWidth()*.46f,stereoArea.getCentreY()-mid*stereoArea.getHeight()*.46f};if(i==0)path.startNewSubPath(point);else path.lineTo(point);}return path;
+    };
+    auto drawField=[&](juce::Path path,juce::Colour colour,bool selected){if(selected){auto filled=path;filled.closeSubPath();g.setColour(colour.withAlpha(.16f));g.fillPath(filled);}g.setColour(colour.withAlpha(selected?.95f:.58f));g.strokePath(path,juce::PathStrokeType(selected?1.5f:1.f));};
+    const auto mixColour=UiTheme::mix(state.state),referenceColour=UiTheme::reference(state.state);
+    drawField(fieldPath(mixLeft,mixRight),mixColour,!referenceSelected);if(referenceAvailable)drawField(fieldPath(referenceLeft,referenceRight),referenceColour,referenceSelected);
+    g.setFont(10.f);g.setColour(juce::Colours::white.withAlpha(.78f));g.drawText("STEREO FIELD / MIX + REFERENCE",stereoArea.toNearestInt().removeFromTop(20),juce::Justification::left);
     area.removeFromLeft(48.f);area.removeFromBottom(22.f);area.reduce(8.0f, 4.0f);
     g.setFont(10.0f);
 
@@ -36,7 +54,6 @@ void EqCurveDisplay::paint(juce::Graphics& g) {
                    (int)x - 14, (int)area.getBottom() + 4, 28, 12, juce::Justification::centred);
     }
 
-    const auto mixColour=UiTheme::mix(state.state),referenceColour=UiTheme::reference(state.state);
     const auto slope=state.getRawParameterValue("analysisSlope")->load();
     const bool showMid=state.getRawParameterValue("showMidSpectrum")->load()>.5f,showSide=state.getRawParameterValue("showSideSpectrum")->load()>.5f;
     auto draw=[&](const SpectrumAnalyzer&analyzer,juce::Colour colour,bool selected,float fillAlpha,float lineAlpha)

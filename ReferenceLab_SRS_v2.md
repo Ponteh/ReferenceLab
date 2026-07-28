@@ -1,6 +1,6 @@
 # ReferenceLab – Software Requirements Specification (SRS)
 
-**Versione documento:** 2.0  
+**Versione documento:** 2.1
 **Stato:** Bozza di progettazione approvata  
 **Autore:** Riccardo  
 **Data:** Luglio 2026  

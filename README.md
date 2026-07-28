@@ -1,4 +1,4 @@
-# ReferenceLab 2.0
+# ReferenceLab 2.1
 
 Plugin VST3/Standalone C++20 basato su JUCE per il confronto A/B con reference locali.
 
@@ -27,6 +27,8 @@ Safe Export è attivo per impostazione predefinita. Alcuni host potrebbero non c
 ## Novita della versione 2
 
 La v2 introduce cataloghi JSON esterni, reference HTTP/HTTPS validate, playlist e cambio rapido multi-reference. Audio e cataloghi remoti usano un downloader condiviso con timeout, redirect, retry controllato, cancellazione e limiti di memoria; l'audio web resta esclusivamente in RAM. Il provider Cambridge MT resta disabilitato finche non saranno completate verifica tecnica e autorizzazione legale.
+
+La 2.1 aggiunge un target LUFS comune con compensazione indipendente di Mix e Reference, FFT Size condivisa tra Analysis e Compare, zoom a rotella dell'oscilloscopio e visualizzazione comparativa del campo stereo.
 
 ## Stato
 
