@@ -14,10 +14,12 @@ HttpDownloadResult HttpDownloader::download(const juce::URL&url,const HttpDownlo
         if(cancelled&&cancelled())return failure(ReferenceError::cancelled,"Operation cancelled");
         if(progress)progress(0.f);
         int status=0;juce::StringPairArray headers;
-        auto options=juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+        auto requestUrl=settings.postData.isNotEmpty()?url.withPOSTData(settings.postData):url;
+        auto options=juce::URL::InputStreamOptions(settings.postData.isNotEmpty()?juce::URL::ParameterHandling::inPostData:juce::URL::ParameterHandling::inAddress)
             .withConnectionTimeoutMs(settings.timeoutMs).withNumRedirectsToFollow(settings.redirects)
-            .withStatusCode(&status).withResponseHeaders(&headers);
-        auto input=url.createInputStream(options);
+            .withStatusCode(&status).withResponseHeaders(&headers)
+            .withExtraHeaders(settings.contentType.isNotEmpty()?"Content-Type: "+settings.contentType+"\r\n":juce::String{});
+        auto input=requestUrl.createInputStream(options);
         if(!input){if(attempt+1<attempts){juce::Thread::sleep(150*(attempt+1));continue;}return failure(ReferenceError::networkUnavailable,"Unable to connect to "+settings.resourceName,status);}
         if(status<200||status>=300){
             if(retryable(status)&&attempt+1<attempts){juce::Thread::sleep(150*(attempt+1));continue;}

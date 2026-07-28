@@ -11,7 +11,10 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/TransportController.h"
 #include "Audio/AirwindowsMeterModel.h"
+#include "Audio/HeadphoneCorrection.h"
 #include "Library/ReferenceManager.h"
+#include "Headphones/AutoEqClient.h"
+#include "Headphones/HeadphoneProfileRepository.h"
 
 class ReferenceLabAudioProcessor final : public juce::AudioProcessor {
 public:
@@ -30,6 +33,12 @@ public:
     void loadFileAsync(const juce::File&,std::function<void(const juce::String&)>);
     void loadUrlAsync(const juce::URL&,std::function<void(const juce::String&)>);
     void importCatalogUrlAsync(const juce::URL&,std::function<void(int,const juce::String&)>);
+    void searchHeadphonesAsync(const juce::String&,std::function<void(std::vector<referencelab::HeadphoneEntry>,const juce::String&)>);
+    void createHeadphoneProfileAsync(const referencelab::HeadphoneEntry&,const juce::String&,std::function<void(const juce::String&)>);
+    std::vector<referencelab::HeadphoneProfile>headphoneProfiles()const{return headphoneProfilesRepository.snapshot();}
+    bool saveHeadphoneProfile(referencelab::HeadphoneProfile,const juce::String&,juce::String&);
+    bool deleteHeadphoneProfile(const juce::String&,juce::String&);
+    void activateHeadphoneProfile(const juce::String&);juce::String activeHeadphoneProfileId()const;
     RemoteLoadState getRemoteLoadState()const noexcept{return remoteLoadState.load();}float getRemoteLoadProgress()const noexcept{return remoteLoadProgress.load();}
     bool saveComparisonPreset(const juce::File&,juce::String&);bool loadComparisonPreset(const juce::File&,juce::String&);
     void playReference(){player.play();} void pauseReference(){player.pause();} void stopReference(){player.stop();}
@@ -51,11 +60,12 @@ public:
     juce::AudioProcessorValueTreeState state;
 private:
     static juce::AudioProcessorValueTreeState::ParameterLayout createLayout();
-    foleys::MagicProcessorState guiState{*this};juce::AudioFormatManager formats; referencelab::ReferenceManager manager; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;referencelab::AirwindowsMeterModel airwindowsMeterModel;
+    foleys::MagicProcessorState guiState{*this};juce::AudioFormatManager formats; referencelab::ReferenceManager manager;referencelab::HeadphoneProfileRepository headphoneProfilesRepository; referencelab::CacheManager cache; referencelab::ReferencePlayer player; referencelab::ComparisonProcessor comparison;referencelab::AnalysisEngine mixAnalysis,referenceAnalysis,outputAnalysis;referencelab::LoudnessMatcher matcher;referencelab::AirwindowsMeterModel airwindowsMeterModel;referencelab::HeadphoneCorrection headphoneCorrection;
     juce::AudioBuffer<float> referenceBuffer;std::atomic<bool>reference{false};float blendCurrent=0.f,blendTarget=0.f,blendStep=0.f;int blendRemaining=0;
     referencelab::SampleFifo mixFifo,referenceFifo,mixSideFifo,referenceSideFifo,outputFifo,compareMixMidFifo,compareReferenceMidFifo,compareMixSideFifo,compareReferenceSideFifo,compareMixLeftFifo,compareMixRightFifo,compareReferenceLeftFifo,compareReferenceRightFifo;
     referencelab::TransportController transportController;std::atomic<bool>hostPlaying{false};std::atomic<double>hostPositionSeconds{-1.0},hostBpm{0.0};std::atomic<int>hostTimeSignatureNumerator{0},hostTimeSignatureDenominator{0};
     mutable juce::CriticalSection activeSourceLock;juce::String activeSource;std::atomic<double>pendingRestorePosition{-1.0};std::atomic<bool>transportAvailable{false};
+    mutable juce::CriticalSection activeHeadphoneLock;juce::String activeHeadphoneId;
     std::shared_ptr<int> lifetimeToken{std::make_shared<int>(0)};juce::ThreadPool remoteDownloadPool{1};std::atomic<RemoteLoadState>remoteLoadState{RemoteLoadState::idle};std::atomic<float>remoteLoadProgress{0};std::atomic<std::uint64_t>remoteLoadGeneration{0},catalogImportGeneration{0};
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ReferenceLabAudioProcessor)
 };

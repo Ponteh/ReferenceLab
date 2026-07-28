@@ -564,6 +564,17 @@ Responsabilità:
 - memorizzare modalità di ascolto;
 - separare stato globale e stato per progetto.
 
+### 5.2.11 HeadphoneCorrection
+
+Responsabilita:
+
+- cercare online modelli e misurazioni tramite il servizio AutoEq;
+- richiedere filtri parametrici e preamp per il target raccomandato;
+- salvare localmente soltanto i profili scelti dall'utente;
+- applicare il profilo attivo come ultimo stadio di monitoraggio;
+- consentire caricamento, modifica ed eliminazione dei profili anche offline;
+- escludere la correzione dal rendering Safe Export.
+
 ---
 
 # 6. Flusso audio
@@ -1152,6 +1163,44 @@ La versione 2 può includere un provider Cambridge MT basato su metadati e URL p
 
 Gli errori di un provider non devono bloccare gli altri provider.
 
+## 7.15 Correzione cuffie
+
+### RF-106 - Ricerca AutoEq online
+
+La pagina Headphones deve consentire la ricerca testuale delle cuffie nel database online AutoEq e mostrare separatamente le varianti di misura per sorgente, formato e rig.
+
+### RF-107 - Generazione del profilo
+
+La selezione di una misura deve richiedere al servizio AutoEq un EQ parametrico basato sul target raccomandato e sul sample rate corrente. La risposta deve includere preamp, tipo, frequenza, gain e Q dei filtri.
+
+### RF-108 - Profili locali
+
+Il plugin deve salvare localmente soltanto i profili scelti dall'utente in un file JSON separato dalla libreria reference. Devono essere supportati piu profili nominabili, per esempio C1 e C2.
+
+### RF-109 - Funzionamento offline
+
+Ricerca e generazione richiedono la rete. Caricamento, bypass, modifica ed eliminazione dei profili gia salvati devono funzionare senza connessione.
+
+### RF-110 - Modifica ed eliminazione
+
+L'utente deve poter modificare nome, preamp, tipo, frequenza, gain e Q dei filtri di un profilo salvato, nonche eliminarlo.
+
+### RF-111 - Stadio finale di monitoraggio
+
+La correzione cuffie deve essere applicata in modo identico a Mix e Reference dopo selezione A/B, modalita di ascolto, analisi e metering. Non deve modificare i file sorgente ne alterare i valori mostrati dagli analizzatori.
+
+### RF-112 - Headroom e bypass
+
+Il preamp AutoEq deve essere applicato prima dei filtri. La pagina deve mostrare chiaramente profilo attivo e stato Enable/Bypass.
+
+### RF-113 - Persistenza del progetto
+
+Lo stato del plugin deve salvare Enable/Bypass e identificatore del profilo attivo. Il contenuto dei profili resta globale e locale, non duplicato nel progetto DAW.
+
+### RF-114 - Safe Export
+
+Con Safe Export attivo la correzione cuffie non deve essere inclusa nel rendering offline.
+
 ---
 
 # 8. Requisiti non funzionali
@@ -1236,6 +1285,14 @@ La finestra del plugin deve essere ridimensionabile entro limiti definiti.
 
 Il plugin deve essere testato almeno su tre DAW VST3 diffuse su Windows.
 
+## RNF-021 - Affidabilita AutoEq
+
+Le richieste AutoEq devono avvenire fuori dal thread audio con timeout, limiti di risposta e messaggi di errore. L'indisponibilita del servizio non deve impedire l'uso dei profili locali.
+
+## RNF-022 - Persistenza profili cuffie
+
+`headphones.json` deve essere salvato atomicamente, validato in lettura e limitato a 16 filtri per profilo.
+
 ---
 
 # 9. Modello dati
@@ -1305,6 +1362,10 @@ I dati numerici sconosciuti devono usare `null`; le liste sconosciute un array v
 ## 9.4 Versionamento schema
 
 Il file deve includere `schemaVersion`. Ogni modifica incompatibile deve introdurre una migrazione.
+
+## 9.5 Profili cuffie
+
+I profili cuffie sono salvati separatamente in `headphones.json` con `schemaVersion`, identificatore, nome, modello, sorgente, rig, target, preamp e lista filtri. Il database completo AutoEq e le misurazioni non devono essere duplicati localmente.
 
 ---
 
@@ -1458,6 +1519,8 @@ Tutte le stringhe visibili nel plug-in devono essere in lingua inglese. Il vinco
 | MIX              | REFERENCE         | OUTPUT                                  |
 | LUFS / Peak / RMS | LUFS / Peak / RMS | Correlation / Width / Oscilloscope     |
 +--------------------------------------------------------------------------------+
+| HEADPHONES | Search AutoEq | Saved profiles | Enable | Preamp | Filter editor   |
++--------------------------------------------------------------------------------+
 ```
 
 La GUI deve indicare chiaramente sorgente attiva, loudness matching, loop, sync, modalità di ascolto, filtri, stato cache e rendering offline.
@@ -1475,6 +1538,8 @@ Il plugin deve gestire senza crash:
 - file mancante;
 - errore di decodifica;
 - rete non disponibile nella v2.
+- servizio AutoEq non disponibile o risposta non valida;
+- profilo cuffie locale corrotto;
 
 Esempio di errore strutturato:
 
@@ -1500,6 +1565,8 @@ enum class ReferenceError
 - La telemetria non è richiesta.
 - Eventuali credenziali future non devono essere salvate in chiaro.
 - I provider online devono rispettare termini d'uso, licenze e autorizzazioni.
+- La ricerca cuffie invia ad AutoEq soltanto query, modello selezionato, sorgente di misura, rig e parametri tecnici; non invia audio dell'utente.
+- Il prodotto deve attribuire AutoEq e conservarne le note di licenza applicabili.
 
 ---
 
@@ -1522,6 +1589,12 @@ enum class ReferenceError
 - cache LRU;
 - validazione marker;
 - percorsi relativi e assoluti.
+- parsing e round trip dei profili cuffie;
+- validazione dei limiti dei filtri;
+- risposta AutoEq valida, vuota e corrotta;
+- coefficienti Peak, Low Shelf e High Shelf;
+- preamp e bypass della correzione cuffie;
+- caricamento dei profili senza rete.
 
 ## 16.2 Test audio
 
@@ -1634,6 +1707,18 @@ La versione 1 è considerata accettabile quando:
 - pomello Slope 0,0–4,5 dB/ottava nel pannello Analysis;
 - pulsante Swap L/R nel pannello Analysis.
 
+## 18.3 Versione 2.1 - Headphone Monitoring
+
+- pagina Headphones dopo Meter;
+- ricerca online nel database AutoEq;
+- generazione PEQ con target raccomandato;
+- profili cuffie locali nominabili;
+- caricamento offline;
+- modifica ed eliminazione dei profili;
+- preamp di sicurezza;
+- correzione come ultimo stadio di monitoraggio;
+- esclusione dal Safe Export.
+
 ---
 
 # 19. Decisioni architetturali principali
@@ -1644,6 +1729,8 @@ La versione 1 è considerata accettabile quando:
 - **ADR-004:** caricamento e cache fuori dal thread audio.
 - **ADR-005:** processing identico su Mix e Reference.
 - **ADR-006:** Safe Export Mode per escludere la reference dal rendering.
+- **ADR-007:** AutoEq viene interrogato online; localmente si conservano soltanto i profili esplicitamente salvati.
+- **ADR-008:** la correzione cuffie e post-analysis e post-metering, immediatamente prima dell'uscita.
 
 ---
 

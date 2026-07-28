@@ -5,6 +5,8 @@
 #include "Audio/ReferencePlayer.h"
 #include "Audio/AnalysisEngine.h"
 #include "Audio/LoudnessMatcher.h"
+#include "Audio/HeadphoneCorrection.h"
+#include "Headphones/HeadphoneProfileRepository.h"
 #include "Audio/SampleFifo.h"
 #include "Audio/SpectrumAnalyzer.h"
 #include "Audio/TransportController.h"
@@ -79,6 +81,11 @@ public:
         expectWithinAbsoluteError(loudnessMatcher.getMixGainDb(),6.f,.05f);
         expectWithinAbsoluteError(loudnessMatcher.getReferenceGainDb(),-4.f,.05f);
         expect(matchedMix.getSample(0,999)>matchedReference.getSample(0,999));
+
+        beginTest("Headphone profiles round trip and process offline");
+        referencelab::HeadphoneProfile headphoneProfile;headphoneProfile.id="c1";headphoneProfile.name="C1";headphoneProfile.headphone="Test Headphone";headphoneProfile.source="test";headphoneProfile.rig="fixture";headphoneProfile.target="Target";headphoneProfile.preampDb=-6.f;headphoneProfile.filters.push_back({referencelab::HeadphoneFilterType::peaking,1000.f,3.f,1.f});
+        auto profileRoot=juce::File::getSpecialLocation(juce::File::tempDirectory).getChildFile("ReferenceLabHeadphoneTest-"+juce::Uuid().toString());profileRoot.createDirectory();referencelab::HeadphoneProfileRepository profileRepository(profileRoot.getChildFile("headphones.json"));juce::String profileError;expect(profileRepository.upsert(headphoneProfile,profileError),profileError);referencelab::HeadphoneProfileRepository loadedProfiles(profileRoot.getChildFile("headphones.json"));expect(loadedProfiles.load(profileError),profileError);auto loadedProfile=loadedProfiles.find("c1");expect(loadedProfile.has_value());if(loadedProfile){expectEquals(loadedProfile->name,juce::String("C1"));expectEquals((int)loadedProfile->filters.size(),1);}
+        referencelab::HeadphoneCorrection headphoneCorrection;headphoneCorrection.prepare(48000,512);headphoneCorrection.setProfile(headphoneProfile);headphoneCorrection.setEnabled(true);juce::AudioBuffer<float>headphoneSignal(2,512);for(int c=0;c<2;++c)for(int i=0;i<512;++i)headphoneSignal.setSample(c,i,.25f);headphoneCorrection.process(headphoneSignal);expect(headphoneSignal.getMagnitude(0,512)<.25f);profileRoot.deleteRecursively();
 
         beginTest("Listen mode is isolated from the Compare signal");
         referencelab::ComparisonProcessor monitorProcessor;monitorProcessor.prepare(48000.0,600);referencelab::ComparisonSettings monitorSettings;monitorSettings.bypass=true;monitorSettings.mode=referencelab::ListeningMode::side;monitorProcessor.update(monitorSettings);juce::AudioBuffer<float>compareMix(2,600),compareReference(2,600);for(int i=0;i<600;++i){compareMix.setSample(0,i,.8f);compareMix.setSample(1,i,.2f);compareReference.setSample(0,i,.4f);compareReference.setSample(1,i,.1f);}monitorProcessor.processEqualizer(compareMix,compareReference);expectWithinAbsoluteError(compareMix.getSample(0,599),.8f,.0001f);expectWithinAbsoluteError(compareMix.getSample(1,599),.2f,.0001f);monitorProcessor.processListeningMode(compareMix);expectWithinAbsoluteError(compareMix.getSample(0,599),.3f,.001f);expectWithinAbsoluteError(compareMix.getSample(1,599),-.3f,.001f);

@@ -46,3 +46,11 @@ https://github.com/airwindows/Meter
 
 ReferenceLab uses JUCE 8.0.8. JUCE licensing information is available at:
 https://juce.com/legal/juce-8-licence/
+
+## AutoEq
+
+ReferenceLab can request headphone measurement metadata and generated
+parametric equalizer settings from the AutoEq service. AutoEq is copyright
+2018-2022 Jaakko Pasanen and is distributed under the MIT License.
+
+Upstream project: https://github.com/jaakkopasanen/AutoEq
