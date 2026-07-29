@@ -4,6 +4,12 @@
 
 namespace referencelab {
 namespace {
+void setContextHelp(juce::Component&component,const juce::String&text)
+{
+    component.getProperties().set("referenceLabContextHelp",text);
+    if(auto*client=dynamic_cast<juce::SettableTooltipClient*>(&component))client->setTooltip({});
+}
+
 void configureKnob(juce::Slider&slider,const juce::String&suffix){
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow,false,72,22);
@@ -31,6 +37,7 @@ HeadphoneCorrectionPage::BandEditor::BandEditor(HeadphoneFilter&value,int index,
     configureKnob(frequency," Hz");configureKnob(gain," dB");configureKnob(q,{});
     frequency.setRange(10,40000,1);frequency.setSkewFactorFromMidPoint(1000);frequency.setValue(filter.frequency,juce::dontSendNotification);
     gain.setRange(-30,30,.1);gain.setValue(filter.gainDb,juce::dontSendNotification);q.setRange(.05,30,.01);q.setValue(filter.q,juce::dontSendNotification);
+    setContextHelp(type,"Choose the headphone filter type.");setContextHelp(frequency,"Set the headphone filter frequency.");setContextHelp(gain,"Set the headphone filter gain.");setContextHelp(q,"Set the headphone filter bandwidth.");
     type.onChange=[this]{capture();};frequency.onValueChange=[this]{capture();};gain.onValueChange=[this]{capture();};q.onValueChange=[this]{capture();};
     addAndMakeVisible(title);addAndMakeVisible(type);addAndMakeVisible(frequency);addAndMakeVisible(gain);addAndMakeVisible(q);
 }
@@ -76,6 +83,8 @@ HeadphoneCorrectionPage::HeadphoneCorrectionPage(ReferenceLabAudioProcessor&p):p
     auto addComponent=[this](juce::Component&component){addAndMakeVisible(component);};
     addComponent(heading);addComponent(status);addComponent(searchToggle);addComponent(search);addComponent(searchOnline);addComponent(onlineResults);addComponent(profileNameHint);addComponent(profileName);addComponent(download);
     addComponent(sidebarToggle);addComponent(saved);addComponent(bypass);addComponent(details);addComponent(save);addComponent(remove);addComponent(curve);addComponent(bandsToggle);addComponent(bandsViewport);
+    setContextHelp(searchToggle,"Show or hide the AutoEQ search.");setContextHelp(search,"Enter a headphone model.");setContextHelp(searchOnline,"Search AutoEQ online.");setContextHelp(onlineResults,"Choose an online measurement.");setContextHelp(profileName,"Set an optional local profile name.");setContextHelp(download,"Save and load this AutoEQ profile.");
+    setContextHelp(sidebarToggle,"Show or hide saved profiles.");setContextHelp(saved,"Select a profile; double-click to load.");setContextHelp(bypass,"Enable or bypass headphone correction.");setContextHelp(save,"Save profile and EQ changes.");setContextHelp(remove,"Delete the selected local profile.");setContextHelp(curve,"Shows the total headphone EQ response.");setContextHelp(bandsToggle,"Show or hide editable EQ bands.");setContextHelp(preamp,"Reduce level before headphone EQ.");
     refreshProfiles();startTimerHz(4);
 }
 void HeadphoneCorrectionPage::setBypassed(bool value){bypass.setToggleState(value,juce::dontSendNotification);bypass.setButtonText(value?"BYPASS ON":"BYPASS OFF");if(auto*parameter=processor.state.getParameter("headphoneEnabled"))parameter->setValueNotifyingHost(value?0.f:1.f);}

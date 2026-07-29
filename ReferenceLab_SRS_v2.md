@@ -1201,6 +1201,19 @@ Lo stato del plugin deve salvare Enable/Bypass e identificatore del profilo atti
 
 Con Safe Export attivo la correzione cuffie non deve essere inclusa nel rendering offline.
 
+### RF-115 - Guida contestuale nella barra superiore
+
+L'area centrale della barra superiore, normalmente occupata dal testo `ReferenceLab 2.1`, deve funzionare anche come guida contestuale. Quando il puntatore rimane fermo su un controllo per almeno 700 ms, l'area deve sostituire temporaneamente il titolo con una descrizione della funzione.
+
+La descrizione deve:
+
+- essere in lingua inglese;
+- essere breve, chiara e leggibile nello spazio disponibile;
+- descrivere l'azione principale del controllo senza riportare istruzioni estese;
+- funzionare per i controlli della barra superiore, delle pagine Reference, Analysis, Compare, Meter e Headphones, della libreria e delle impostazioni;
+- tornare a `ReferenceLab 2.1` quando il puntatore lascia il controllo o passa a un elemento privo di descrizione;
+- non aprire tooltip o finestre flottanti, non coprire grafici o cursori, non catturare il mouse e non modificare il parametro osservato.
+
 ---
 
 # 8. Requisiti non funzionali
@@ -1292,6 +1305,10 @@ Le richieste AutoEq devono avvenire fuori dal thread audio con timeout, limiti d
 ## RNF-022 - Persistenza profili cuffie
 
 `headphones.json` deve essere salvato atomicamente, validato in lettura e limitato a 16 filtri per profilo.
+
+## RNF-023 - Leggibilita della guida contestuale
+
+La guida contestuale deve comparire senza bloccare il thread UI, con un ritardo nominale di 700 ms. Il testo deve essere su una sola riga, conciso e in inglese. Il cambio di testo non deve alterare il layout della barra superiore ne interferire con trascinamento, rotella, focus o automazione dei controlli. Le descrizioni della guida non devono essere registrate come tooltip JUCE e non devono generare messaggi sovrapposti all'interfaccia.
 
 ---
 
@@ -1443,6 +1460,7 @@ public:
 - **US-010:** Come utente, voglio che la reference sia esclusa automaticamente dall'esportazione.
 - **US-011:** Come utente, voglio che una reference già caricata sia disponibile immediatamente.
 - **US-012:** Come utente, voglio importare in futuro cataloghi JSON e sorgenti HTTP.
+- **US-013:** Come utente, voglio conoscere rapidamente la funzione di un controllo senza lasciare la finestra del plugin.
 
 ---
 
@@ -1494,9 +1512,21 @@ public:
 
 ---
 
+## UC-006 - Consultare la guida contestuale
+
+1. l'utente porta il puntatore sopra un controllo;
+2. il plugin attende 700 ms senza modificare il controllo;
+3. l'area centrale sostituisce `ReferenceLab 2.1` con una frase inglese breve;
+4. l'utente sposta il puntatore;
+5. il plugin ripristina il titolo e avvia una nuova attesa se il nuovo controllo dispone di una descrizione.
+
+---
+
 # 13. Specifica GUI
 
 Tutte le stringhe visibili nel plug-in devono essere in lingua inglese. Il vincolo include nomi delle pagine e delle sezioni, label, valori descrittivi, menu, tooltip, finestre di dialogo, stati dinamici, avvisi e messaggi di errore. Identificatori interni, nomi dei parametri e dati inseriti dall'utente non devono essere tradotti.
+
+La guida contestuale nella barra superiore segue lo stesso vincolo linguistico e deve preferire frasi operative brevi, senza abbreviazioni ambigue.
 
 ```text
 +--------------------------------------------------------------------------------+

@@ -6,7 +6,7 @@
 class ReferenceLabAudioProcessor;
 
 namespace referencelab {
-class HeadphoneCorrectionPage final:public juce::Component,private juce::ListBoxModel,private juce::Timer {
+class HeadphoneCorrectionPage final:public juce::Component,public juce::SettableTooltipClient,private juce::ListBoxModel,private juce::Timer {
 public:
     explicit HeadphoneCorrectionPage(ReferenceLabAudioProcessor&);
     void paint(juce::Graphics&)override;void resized()override;
@@ -22,7 +22,7 @@ private:
         HeadphoneFilter&filter;std::function<void()>onEdited;juce::Label title;juce::ComboBox type;juce::Slider frequency,gain,q;
         void capture();
     };
-    class CurveDisplay final:public juce::Component {
+    class CurveDisplay final:public juce::Component,public juce::SettableTooltipClient {
     public:
         void setProfile(const HeadphoneProfile*value,double sr){profile=value;sampleRate=sr>0?sr:44100.0;repaint();}
         void paint(juce::Graphics&)override;
